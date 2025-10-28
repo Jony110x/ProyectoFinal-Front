@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 type Props = {
   type?: string;
+  username?: string;
 };
 
 interface Pago {
@@ -21,7 +22,7 @@ interface Carer {
   name: string;
 }
 
-export default function VistaPagos({ type = "estudiante" }: Props) {
+export default function VistaPagos({ type = "estudiante", username }: Props) {
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [pagosFiltrados, setPagosFiltrados] = useState<Pago[]>([]);
   const [carers, setCarers] = useState<Carer[]>([]);
@@ -36,6 +37,7 @@ export default function VistaPagos({ type = "estudiante" }: Props) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user.id;
   const userType = user.type || type;
+  const userUsername = username || user.username;
   
   const isAdmin = userType === "admin";
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export default function VistaPagos({ type = "estudiante" }: Props) {
 
   useEffect(() => {
     cargarPagos(true);
-  }, [userId, isAdmin]);
+  }, [userId, isAdmin, userUsername]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,112 +69,111 @@ export default function VistaPagos({ type = "estudiante" }: Props) {
   }, [loading, nextCursor, busqueda]);
 
   const cargarPagos = async (reload = false) => {
-  setLoading(true);
-  try {
-    const token = localStorage.getItem("token") || "";
-    
-    // ✅ SI ES ESTUDIANTE, USAR ENDPOINT ESPECÍFICO
-    if (!isAdmin && userId) {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token") || "";
+      
+      // ✅ SI ES ESTUDIANTE, USAR ENDPOINT ESPECÍFICO
+      if (!isAdmin && userUsername) {
+        const res = await axios.get(
+          `https://proyectofinal-backend-1-uqej.onrender.com/payment/user/${userUsername}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        
+        const nuevosPagos: Pago[] = res.data.map((pago: any) => ({
+          id: pago.id,
+          amount: pago.amount,
+          affected_month: pago.affected_month,
+          carer: pago.carer,
+          carer_id: pago.carer_id || 0,
+          username: pago.username
+        }));
+        
+        setPagos(nuevosPagos);
+        setNextCursor(null);
+        return;
+      }
+
+      // ✅ SI ES ADMIN, USAR PAGINADO NORMAL
+      const body: any = { limit: 10 };
+      if (!reload && nextCursor) body.last_seen_id = nextCursor;
+
+      const res = await axios.post(
+        "https://proyectofinal-backend-1-uqej.onrender.com/payment/paginated",
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const nuevosPagos: Pago[] = res.data.payments;
+
+      if (reload) {
+        setPagos(nuevosPagos);
+      } else {
+        setPagos((prev) => [...prev, ...nuevosPagos]);
+      }
+
+      setNextCursor(res.data.next_cursor);
+    } catch (error) {
+      console.error("Error al cargar pagos:", error);
+      setMensaje("❌ Error al cargar pagos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buscarPagos = async (query: string) => {
+    setBusqueda(query);
+
+    if (!query.trim()) {
+      setPagosFiltrados(pagos);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // ✅ SI ES ESTUDIANTE, buscar solo en sus pagos cargados
+      if (!isAdmin) {
+        const filtrados = pagos.filter(pago => 
+          pago.username?.toLowerCase().includes(query.toLowerCase()) ||
+          pago.carer.toLowerCase().includes(query.toLowerCase()) ||
+          pago.amount.toString().includes(query) ||
+          pago.affected_month.includes(query)
+        );
+        setPagosFiltrados(filtrados);
+        setLoading(false);
+        return;
+      }
+
+      // ✅ SI ES ADMIN, usar endpoint de búsqueda
+      const token = localStorage.getItem("token") || "";
+      const params = new URLSearchParams({ 
+        q: query, 
+        limit: "50", 
+        offset: "0" 
+      });
+
       const res = await axios.get(
-        `https://proyectofinal-backend-1-uqej.onrender.com/payment/user/${user.username}`, // Usar username en lugar de ID
+        `https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`, 
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
-      const nuevosPagos: Pago[] = res.data.map((pago: any) => ({
-        id: pago.id,
-        amount: pago.amount,
-        affected_month: pago.affected_month,
-        carer: pago.carer,
-        carer_id: pago.carer_id || 0, // Ajustar según tu estructura
-        username: pago.username
-      }));
-      
-      setPagos(nuevosPagos);
-      setNextCursor(null);
-      return;
-    }
 
-    // ✅ SI ES ADMIN, USAR PAGINADO NORMAL
-    const body: any = { limit: 10 };
-    if (!reload && nextCursor) body.last_seen_id = nextCursor;
-
-    const res = await axios.post(
-      "https://proyectofinal-backend-1-uqej.onrender.com/payment/paginated",
-      body,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const nuevosPagos: Pago[] = res.data.payments;
-
-    if (reload) {
-      setPagos(nuevosPagos);
-    } else {
-      setPagos((prev) => [...prev, ...nuevosPagos]);
-    }
-
-    setNextCursor(res.data.next_cursor);
-  } catch (error) {
-    console.error("Error al cargar pagos:", error);
-    setMensaje("❌ Error al cargar pagos");
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const buscarPagos = async (query: string) => {
-  setBusqueda(query);
-
-  if (!query.trim()) {
-    setPagosFiltrados(pagos);
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const token = localStorage.getItem("token") || "";
-    
-    // ✅ SI ES ESTUDIANTE, buscar solo en sus pagos cargados
-    if (!isAdmin) {
-      const filtrados = pagos.filter(pago => 
-        pago.username?.toLowerCase().includes(query.toLowerCase()) ||
-        pago.carer.toLowerCase().includes(query.toLowerCase()) ||
-        pago.amount.toString().includes(query) ||
-        pago.affected_month.includes(query)
-      );
-      setPagosFiltrados(filtrados);
+      setPagosFiltrados(res.data.payments);
+    } catch (error) {
+      console.error("Error al buscar pagos:", error);
+      setMensaje("❌ Error al buscar pagos");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // ✅ SI ES ADMIN, usar endpoint de búsqueda
-    const params = new URLSearchParams({ 
-      q: query, 
-      limit: "50", 
-      offset: "0" 
-    });
-
-    const res = await axios.get(
-      `https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`, 
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    setPagosFiltrados(res.data.payments);
-  } catch (error) {
-    console.error("Error al buscar pagos:", error);
-    setMensaje("❌ Error al buscar pagos");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleGuardarPago = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -431,7 +432,38 @@ export default function VistaPagos({ type = "estudiante" }: Props) {
                 
                 {isAdmin && (
                   <div className="pt-3 border-t mt-2">
-                    {/* ... (código de acciones para admin) */}
+                    {pagoAConfirmar === p.id ? (
+                      <div className="flex gap-2 items-center">
+                        <span className="text-sm">¿Eliminar?</span>
+                        <button
+                          onClick={() => handleEliminarPago(p.id)}
+                          className="bg-red-600 text-white text-xs px-3 py-1 rounded hover:bg-red-700"
+                        >
+                          Sí
+                        </button>
+                        <button
+                          onClick={() => setPagoAConfirmar(null)}
+                          className="bg-gray-300 text-gray-800 text-xs px-3 py-1 rounded hover:bg-gray-400"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPagoEditando(p)}
+                          className="flex-1 bg-blue-600 text-white text-sm px-3 py-2 rounded hover:bg-blue-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => setPagoAConfirmar(p.id)}
+                          className="flex-1 bg-red-600 text-white text-sm px-3 py-2 rounded hover:bg-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

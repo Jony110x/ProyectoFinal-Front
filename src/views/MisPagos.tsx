@@ -9,9 +9,9 @@ export default function MisPagos() {
 
   try {
     const user = JSON.parse(userRaw);
-
-    if (!user.username || !user.type) {
-      return <p>Error: usuario inválido</p>;
+    
+    if (!user.username) {
+      return <p>Error: datos de usuario incompletos</p>;
     }
 
     return <VistaPagos username={user.username} type={user.type} />;
