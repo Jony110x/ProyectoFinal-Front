@@ -97,168 +97,168 @@ export default function Career() {
 
   return (
     <motion.div
-      className="max-w-3xl mx-auto p-0 bg-white rounded-lg shadow mt-0"
-      initial={{ opacity: 0, x: -50 }} // arranca invisible y un poco a la izquierda
-      animate={{ opacity: 1, x: 0 }} // entra deslizándose al centro
-      exit={{ opacity: 0, x: 50 }} // cuando salga, se desliza a la derecha
+      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 50 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-teal-800 flex-1 text-center">
-          Listado de Carreras
-        </h2>
-      </div>
-      {userType === "admin" && (
-        <span className="text-sm text-center sm:text-left text-teal-700">
-          Seleccioná una carrera para ver el listado de materias disponibles.
-        </span>
-      )}
-
-      {message && (
-        <div
-          className={`mb-4 text-center px-4 py-2 rounded ${
-            message.type === "success"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {message.text}
+      <div className="py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-800 flex-1 text-center">
+            Listado de Carreras
+          </h2>
         </div>
-      )}
-
-      {userType === "estudiante" && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 text-sm text-teal-700 gap-2 sm:gap-0">
-          <span className="text-center sm:text-left text-teal-700">
+        {userType === "admin" && (
+          <span className="text-sm text-center sm:text-left text-teal-700 block mb-4">
             Seleccioná una carrera para ver el listado de materias disponibles.
           </span>
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
+        )}
+
+        {message && (
+          <div
+            className={`mb-4 text-center px-4 py-2 rounded ${
+              message.type === "success"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
           >
-            Volver
-          </button>
-        </div>
-      )}
+            {message.text}
+          </div>
+        )}
 
-      <ul className="divide-y divide-gray-200">
-        {careers.map((career) => (
-          <li
-            key={career.id}
-            className="py-3 flex justify-between items-center"
-          >
-            <div className="flex-1 flex items-center gap-2">
-              <span className="text-xl"></span>
-              {editId === career.id ? (
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="border px-2 py-1 rounded w-full"
-                  autoFocus
-                />
-              ) : (
-                <Link
-                  to={`/career/${career.id}/materia`}
-                  className="text-teal-700 font-medium hover:underline"
-                >
-                  {career.name}
-                </Link>
-              )}
-            </div>
-
-            {userType === "admin" && (
-              <div className="flex items-center space-x-2 ml-4">
-                {editId === career.id ? (
-                  <button
-                    onClick={() => handleEditCareer(career.id)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm"
-                  >
-                    Guardar
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditId(career.id);
-                      setEditName(career.name);
-                    }}
-                    className="text-blue-600 hover:underline mr-2"
-                  >
-                    Editar
-                  </button>
-                )}
-
-                {deleteCareerConfirmId === career.id ? (
-                  <>
-                    <span className="text-sm">¿Seguro?</span>
-                    <button
-                      onClick={() => confirmDeleteCareer(career.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                    >
-                      Sí
-                    </button>
-                    <button
-                      onClick={() => setDeleteCareerConfirmId(null)}
-                      className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                    >
-                      No
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setDeleteCareerConfirmId(career.id)}
-                    className="text-red-600 hover:underline mr-2"
-                  >
-                    Eliminar
-                  </button>
-                )}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {userType === "admin" && !showForm && (
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow"
-          >
-            + Agregar Carrera
-          </button>
-        </div>
-      )}
-
-      {userType === "admin" && showForm && (
-        <div className="mt-6 space-y-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={newCareerName}
-            onChange={(e) => setNewCareerName(e.target.value)}
-            placeholder="Nombre de la carrera"
-            className="w-full border px-3 py-2 rounded"
-          />
-          <div className="flex justify-end space-x-2">
+        {userType === "estudiante" && (
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 text-sm text-teal-700 gap-2">
+            <span className="text-center sm:text-left">
+              Seleccioná una carrera para ver el listado de materias disponibles.
+            </span>
             <button
-              onClick={handleAddCareer}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+              onClick={() => navigate(-1)}
+              className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
             >
-              Guardar
-            </button>
-            <button
-              onClick={() => {
-                setShowForm(false);
-                setNewCareerName("");
-              }}
-              className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
-            >
-              Cancelar
+              Volver
             </button>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        <ul className="divide-y divide-gray-200">
+          {careers.map((career) => (
+            <li
+              key={career.id}
+              className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+            >
+              <div className="flex-1 flex items-center gap-2">
+                <span className="text-xl"></span>
+                {editId === career.id ? (
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="border px-2 py-1 rounded w-full"
+                    autoFocus
+                  />
+                ) : (
+                  <Link
+                    to={`/career/${career.id}/materia`}
+                    className="text-teal-700 font-medium hover:underline text-base sm:text-lg"
+                  >
+                    {career.name}
+                  </Link>
+                )}
+              </div>
+
+              {userType === "admin" && (
+                <div className="flex items-center gap-2 flex-wrap justify-end w-full sm:w-auto">
+                  {editId === career.id ? (
+                    <button
+                      onClick={() => handleEditCareer(career.id)}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Guardar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditId(career.id);
+                        setEditName(career.name);
+                      }}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Editar
+                    </button>
+                  )}
+
+                  {deleteCareerConfirmId === career.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">¿Seguro?</span>
+                      <button
+                        onClick={() => confirmDeleteCareer(career.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Sí
+                      </button>
+                      <button
+                        onClick={() => setDeleteCareerConfirmId(null)}
+                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-sm"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteCareerConfirmId(career.id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {userType === "admin" && !showForm && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setShowForm(true)}
+              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow text-sm sm:text-base"
+            >
+              + Agregar Carrera
+            </button>
+          </div>
+        )}
+
+        {userType === "admin" && showForm && (
+          <div className="mt-6 space-y-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newCareerName}
+              onChange={(e) => setNewCareerName(e.target.value)}
+              placeholder="Nombre de la carrera"
+              className="w-full border px-3 py-2 rounded text-sm sm:text-base"
+            />
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+              <button
+                onClick={handleAddCareer}
+                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm sm:text-base"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setNewCareerName("");
+                }}
+                className="w-full sm:w-auto bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm sm:text-base"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }

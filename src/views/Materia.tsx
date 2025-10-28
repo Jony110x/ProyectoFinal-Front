@@ -155,7 +155,7 @@ function Materias() {
 
       setTimeout(() => {
         setMensajeExito(null);
-      }, 3000); // desaparece en 3 segundos
+      }, 3000);
     } catch (err) {
       console.error(err);
       alert("Error al guardar notas");
@@ -209,7 +209,6 @@ function Materias() {
         tipo_relacion: "estudiante",
       });
 
-      // Marcar como inscripto SOLO esa materia
       setInscripciones((prev) => ({ ...prev, [materiaId]: true }));
     } catch (err) {
       console.error(err);
@@ -260,7 +259,6 @@ function Materias() {
 
   useEffect(() => {
     fetchMateria();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [careerId]);
 
   useEffect(() => {
@@ -269,7 +267,6 @@ function Materias() {
         const res = await axios.get("https://proyectofinal-backend-1-uqej.onrender.com/asignadas");
         const materiasAsignadas = res.data;
         const asignadasObj: { [materiaId: number]: boolean } = {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         materiasAsignadas.forEach((item: any) => {
           asignadasObj[item.materia_id] = true;
         });
@@ -315,295 +312,302 @@ function Materias() {
     }
   }, [showForm, editMateriaId]);
 
-  if (loading) return <p>Cargando materias...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p className="text-center p-4">Cargando materias...</p>;
+  if (error) return <p className="text-red-600 text-center p-4">{error}</p>;
 
   return (
     <motion.div
-      className="max-w-3xl mx-auto p-0 bg-white rounded-lg shadow mt-0"
-      initial={{ opacity: 0, x: -50 }} // arranca invisible y un poco a la izquierda
-      animate={{ opacity: 1, x: 0 }} // entra deslizándose al centro
-      exit={{ opacity: 0, x: 50 }} // cuando salga, se desliza a la derecha
+      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 50 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-teal-800 flex-1 text-center">
-          Materias
-        </h2>
-      </div>
-      <div className="flex justify-between items-center mb-4 text-sm text-teal-700">
-        <span className="text-center sm:text-left">
-          {userType === "estudiante"
-            ? "Seleccioná una materia para inscribirte."
-            : userType === "profesor"
-            ? "Hacé clic en una materia para ver y cargar notas."
-            : "Gestioná las materias disponibles en el sistema."}
-        </span>
+      <div className="py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-800 flex-1 text-center">
+            Materias
+          </h2>
+        </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 text-sm text-teal-700">
+          <span className="text-center sm:text-left">
+            {userType === "estudiante"
+              ? "Seleccioná una materia para inscribirte."
+              : userType === "profesor"
+              ? "Hacé clic en una materia para ver y cargar notas."
+              : "Gestioná las materias disponibles en el sistema."}
+          </span>
 
-        {userType !== "profesor" && (
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
-          >
-            Volver
-          </button>
-        )}
-      </div>
-      <ul className="divide-y divide-gray-200">
-        {materias.map((subject) => (
-          <li key={subject.id} className="py-3">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div className="flex-1 flex items-center gap-2">
-                {userType === "profesor" ? (
+          {userType !== "profesor" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
+            >
+              Volver
+            </button>
+          )}
+        </div>
+        
+        <ul className="divide-y divide-gray-200">
+          {materias.map((subject) => (
+            <li key={subject.id} className="py-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex-1 flex items-center gap-2">
+                  {userType === "profesor" ? (
+                    <button
+                      onClick={() => fetchEstudiantes(subject.id)}
+                      className="text-teal-700 font-medium hover:underline text-left text-base sm:text-lg"
+                    >
+                      {subject.name}
+                    </button>
+                  ) : (
+                    <span className="text-teal-800 font-medium text-base sm:text-lg">
+                      {subject.name}
+                    </span>
+                  )}
+                </div>
+
+                {userType === "admin" && (
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-wrap w-full sm:w-auto">
+                    {!asignadas[subject.id] ? (
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={() => handleAsignarProfesorClick(subject.id)}
+                          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm"
+                        >
+                          Asignar profesor
+                        </button>
+                        {materiaParaAsignar === subject.id && (
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <select
+                              onChange={(e) =>
+                                setSelectedProfesorId(Number(e.target.value))
+                              }
+                              value={selectedProfesorId ?? ""}
+                              className="w-full sm:w-auto border rounded px-2 py-2 text-sm"
+                            >
+                              <option value="">Seleccionar profesor</option>
+                              {profesores.map((prof) => (
+                                <option key={prof.id} value={prof.id}>
+                                  {prof.username}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={handleConfirmarAsignacion}
+                              className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                            >
+                              Confirmar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        className="w-full sm:w-auto bg-green-100 text-green-700 px-3 py-2 rounded text-sm"
+                        disabled
+                      >
+                        Profesor asignado
+                      </button>
+                    )}
+
+                    <div className="flex gap-2 mt-2 sm:mt-0">
+                      {editMateriaId === subject.id ? (
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
+                          <input
+                            ref={editInputRef}
+                            type="text"
+                            value={editMateriaName}
+                            onChange={(e) => setEditMateriaName(e.target.value)}
+                            className="w-full border px-2 py-2 rounded text-sm"
+                          />
+                          <button
+                            onClick={() => handleEditMateria(subject.id)}
+                            className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                          >
+                            Guardar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditMateriaId(subject.id);
+                            setEditMateriaName(subject.name);
+                          }}
+                          className="w-full sm:w-auto text-blue-600 hover:underline px-3 py-2 text-sm border border-blue-200 rounded"
+                        >
+                          Editar
+                        </button>
+                      )}
+
+                      {deleteConfirmId === subject.id ? (
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                          <span className="text-sm">¿Seguro?</span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => confirmDeleteMateria(subject.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
+                            >
+                              Sí
+                            </button>
+                            <button
+                              onClick={cancelDeleteMateria}
+                              className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded text-sm"
+                            >
+                              No
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleDeleteMateria(subject.id)}
+                          className="w-full sm:w-auto text-red-600 hover:underline px-3 py-2 text-sm border border-red-200 rounded"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {userType === "estudiante" && (
                   <button
-                    onClick={() => fetchEstudiantes(subject.id)}
-                    className="text-teal-700 font-medium hover:underline"
+                    className={`w-full sm:w-auto px-4 py-2 rounded text-sm text-white ${
+                      inscripciones[subject.id]
+                        ? "bg-gray-400 cursor-default"
+                        : "bg-teal-500 hover:bg-teal-600"
+                    }`}
+                    onClick={() => handleInscribirse(subject.id)}
+                    disabled={inscripciones[subject.id]}
                   >
-                    {subject.name}
+                    {inscripciones[subject.id] ? "Inscripto" : "Inscribirse"}
                   </button>
-                ) : (
-                  <span className="text-teal-800 font-medium">
-                    {subject.name}
-                  </span>
                 )}
               </div>
 
-              {userType === "admin" && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {!asignadas[subject.id] ? (
-                    <>
-                      <button
-                        onClick={() => handleAsignarProfesorClick(subject.id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm"
-                      >
-                        Asignar profesor
-                      </button>
-                      {materiaParaAsignar === subject.id && (
-                        <>
-                          <select
-                            onChange={(e) =>
-                              setSelectedProfesorId(Number(e.target.value))
-                            }
-                            value={selectedProfesorId ?? ""}
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            <option value="">Seleccionar profesor</option>
-                            {profesores.map((prof) => (
-                              <option key={prof.id} value={prof.id}>
-                                {prof.username}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={handleConfirmarAsignacion}
-                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm"
-                          >
-                            Confirmar
-                          </button>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm"
-                      disabled
-                    >
-                      Profesor asignado
-                    </button>
-                  )}
+              {userType === "profesor" && materiaExpandida === subject.id && (
+                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border text-sm">
+                      <thead className="bg-teal-100 text-teal-800">
+                        <tr>
+                          <th className="border px-2 py-1">Nombre</th>
+                          <th className="border px-2 py-1">Apellido</th>
+                          <th className="border px-2 py-1">DNI</th>
+                          <th className="border px-2 py-1">Email</th>
+                          <th className="border px-2 py-1">Nota</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {estudiantesPorMateria[subject.id]?.map((est) => (
+                          <tr key={est.id}>
+                            <td className="border px-2 py-1">{est.nombre}</td>
+                            <td className="border px-2 py-1">{est.apellido}</td>
+                            <td className="border px-2 py-1">{est.DNI}</td>
+                            <td className="border px-2 py-1 text-xs">{est.email}</td>
+                            <td className="border px-2 py-1">
+                              <input
+                                type="number"
+                                min={1}
+                                max={10}
+                                value={
+                                  notasPorMateria[subject.id]?.[est.id] !==
+                                  undefined
+                                    ? notasPorMateria[subject.id][est.id]
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  let value = Number(e.target.value);
+                                  if (!isNaN(value)) {
+                                    if (value < 1) value = 1;
+                                    if (value > 10) value = 10;
+                                    handleNotaChange(subject.id, est.id, value);
+                                  }
+                                }}
+                                className="border rounded w-16 px-1"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                  {editMateriaId === subject.id ? (
-                    <>
-                      <input
-                        ref={editInputRef}
-                        type="text"
-                        value={editMateriaName}
-                        onChange={(e) => setEditMateriaName(e.target.value)}
-                        className="border px-2 py-1 rounded text-sm w-[160px]"
-                      />
-                      <button
-                        onClick={() => handleEditMateria(subject.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm"
-                      >
-                        Guardar
-                      </button>
-                    </>
-                  ) : (
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
                     <button
-                      disabled={editMateriaId === subject.id}
-                      onClick={() => {
-                        setEditMateriaId(subject.id);
-                        setEditMateriaName(subject.name);
+                      onClick={async () => {
+                        await guardarNotas(subject.id);
+                        setTimeout(() => {
+                          setMateriaExpandida(null);
+                        }, 3000);
                       }}
-                      className="text-blue-600 hover:underline mr-2"
+                      className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm"
                     >
-                      Editar
+                      Guardar Notas
                     </button>
-                  )}
-
-                  {deleteConfirmId === subject.id ? (
-                    <>
-                      <span className="text-sm">¿Seguro?</span>
-                      <button
-                        onClick={() => confirmDeleteMateria(subject.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                      >
-                        Sí
-                      </button>
-                      <button
-                        onClick={cancelDeleteMateria}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                      >
-                        No
-                      </button>
-                    </>
-                  ) : (
                     <button
-                      onClick={() => handleDeleteMateria(subject.id)}
-                      className="text-red-600 hover:underline mr-2"
+                      onClick={() => setMateriaExpandida(null)}
+                      className="w-full sm:w-auto bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm"
                     >
-                      Eliminar
+                      Cancelar
                     </button>
-                  )}
+                  </div>
                 </div>
               )}
-
-              {userType === "estudiante" && (
-                <button
-                  className={`px-3 py-1 rounded text-sm text-white ${
-                    inscripciones[subject.id]
-                      ? "bg-gray-400 cursor-default"
-                      : "bg-teal-500 hover:bg-teal-600"
-                  }`}
-                  onClick={() => handleInscribirse(subject.id)}
-                  disabled={inscripciones[subject.id]}
-                >
-                  {inscripciones[subject.id] ? "Inscripto" : "Inscribirse"}
-                </button>
-              )}
-            </div>
-
-            {userType === "profesor" && materiaExpandida === subject.id && (
-              <div className="mt-4">
-                <table className="w-full border text-sm">
-                  <thead className="bg-teal-100 text-teal-800">
-                    <tr>
-                      <th className="border px-2 py-1">Nombre</th>
-                      <th className="border px-2 py-1">Apellido</th>
-                      <th className="border px-2 py-1">DNI</th>
-                      <th className="border px-2 py-1">Email</th>
-                      <th className="border px-2 py-1">Nota</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {estudiantesPorMateria[subject.id]?.map((est) => (
-                      <tr key={est.id}>
-                        <td className="border px-2 py-1">{est.nombre}</td>
-                        <td className="border px-2 py-1">{est.apellido}</td>
-                        <td className="border px-2 py-1">{est.DNI}</td>
-                        <td className="border px-2 py-1">{est.email}</td>
-                        <td className="border px-2 py-1">
-                          <input
-                            type="number"
-                            min={1}
-                            max={10}
-                            value={
-                              notasPorMateria[subject.id]?.[est.id] !==
-                              undefined
-                                ? notasPorMateria[subject.id][est.id]
-                                : ""
-                            }
-                            onChange={(e) => {
-                              let value = Number(e.target.value);
-                              if (!isNaN(value)) {
-                                if (value < 1) value = 1;
-                                if (value > 10) value = 10;
-                                handleNotaChange(subject.id, est.id, value);
-                              }
-                            }}
-                            className="border rounded w-16 px-1"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={async () => {
-                      await guardarNotas(subject.id);
-
-                      // Esperar unos segundos antes de cerrar
-                      setTimeout(() => {
-                        setMateriaExpandida(null);
-                      }, 3000);
-                    }}
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded text-sm"
-                  >
-                    Guardar Notas
-                  </button>
-                  <button
-                    onClick={() => setMateriaExpandida(null)}
-                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-      {userType === "admin" && !showForm && (
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow"
-          >
-            + Agregar Materia
-          </button>
-        </div>
-      )}
-      {userType === "admin" && showForm && (
-        <div className="mt-6 space-y-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={newMateriaName}
-            onChange={(e) => setNewMateriaName(e.target.value)}
-            placeholder="Nombre de la materia"
-            className="w-full border px-3 py-2 rounded"
-          />
-          <div className="flex justify-end space-x-2">
+            </li>
+          ))}
+        </ul>
+        
+        {userType === "admin" && !showForm && (
+          <div className="mt-6 text-center">
             <button
-              onClick={handleAddMateria}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+              onClick={() => setShowForm(true)}
+              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow text-sm sm:text-base"
             >
-              Guardar
-            </button>
-            <button
-              onClick={() => {
-                setShowForm(false);
-                setNewMateriaName("");
-              }}
-              className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
-            >
-              Cancelar
+              + Agregar Materia
             </button>
           </div>
-        </div>
-      )}
-      {mensajeExito && (
-        <div
-          className="fixed top-[80px] right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50
-               animate-fade-in-out transition-opacity duration-500"
-        >
-          {mensajeExito}
-        </div>
-      )}
-    </div>
+        )}
+        
+        {userType === "admin" && showForm && (
+          <div className="mt-6 space-y-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMateriaName}
+              onChange={(e) => setNewMateriaName(e.target.value)}
+              placeholder="Nombre de la materia"
+              className="w-full border px-3 py-2 rounded text-sm sm:text-base"
+            />
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
+              <button
+                onClick={handleAddMateria}
+                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm sm:text-base"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setNewMateriaName("");
+                }}
+                className="w-full sm:w-auto bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm sm:text-base"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {mensajeExito && (
+          <div
+            className="fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50
+               animate-fade-in-out transition-opacity duration-500 text-sm"
+          >
+            {mensajeExito}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }

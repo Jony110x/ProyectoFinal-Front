@@ -180,11 +180,11 @@ export default function ListaUsuarios() {
     state: PaginationState;
     setState: React.Dispatch<React.SetStateAction<PaginationState>>;
   }) => (
-    <div className="flex justify-center gap-4 mt-4">
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4">
       <button
         onClick={() => setState(prev => ({ ...prev, page: Math.max(prev.page - 1, 0) }))}
         disabled={state.page === 0}
-        className={`px-4 py-2 rounded-md shadow text-sm ${
+        className={`w-full sm:w-auto px-4 py-2 rounded-md shadow text-sm ${
           state.page === 0
             ? "bg-gray-300 cursor-not-allowed"
             : "bg-teal-600 hover:bg-teal-700 text-white"
@@ -193,7 +193,7 @@ export default function ListaUsuarios() {
         ◀ Anterior {tipo}
       </button>
 
-      <span className="px-4 py-2 text-sm text-gray-600 self-center">
+      <span className="px-4 py-2 text-sm text-gray-600 text-center">
         Página {state.page + 1} de {Math.ceil(state.total / limit)} ({state.total} total)
       </span>
 
@@ -203,7 +203,7 @@ export default function ListaUsuarios() {
           page: (prev.page + 1) * limit < prev.total ? prev.page + 1 : prev.page 
         }))}
         disabled={(state.page + 1) * limit >= state.total}
-        className={`px-4 py-2 rounded-md shadow text-sm ${
+        className={`w-full sm:w-auto px-4 py-2 rounded-md shadow text-sm ${
           (state.page + 1) * limit >= state.total
             ? "bg-gray-300 cursor-not-allowed"
             : "bg-teal-600 hover:bg-teal-700 text-white"
@@ -220,35 +220,107 @@ export default function ListaUsuarios() {
       {usuarios.length === 0 ? (
         <p className="text-gray-500 text-center py-4">No hay {titulo.toLowerCase()} para mostrar</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-md shadow">
-            <thead className="bg-teal-100 text-teal-800">
-              <tr>
-                <th className="py-2 px-4 text-left">Nombre</th>
-                <th className="py-2 px-4 text-left">Apellido</th>
-                <th className="py-2 px-4 text-left">DNI</th>
-                <th className="py-2 px-4 text-left">Email</th>
-                <th className="py-2 px-4 text-left">Usuario</th>
-                <th className="py-2 px-4 text-left">Tipo</th>
-                <th className="py-2 px-4 text-left">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((u) => (
-                <tr key={u.id} className="border-t hover:bg-gray-50">
-                  <td className="py-2 px-4">{u.firstName}</td>
-                  <td className="py-2 px-4">{u.lastName}</td>
-                  <td className="py-2 px-4">{u.dni}</td>
-                  <td className="py-2 px-4">{u.email}</td>
-                  <td className="py-2 px-4">{u.username}</td>
-                  <td className="py-2 px-4 capitalize">{u.type}</td>
-                  <td className="py-2 px-4">
+        <>
+          {/* Vista de tabla para desktop */}
+          <div className="hidden lg:block overflow-x-auto">
+            <table className="w-full bg-white border rounded-md shadow">
+              <thead className="bg-teal-100 text-teal-800">
+                <tr>
+                  <th className="py-2 px-4 text-left">Nombre</th>
+                  <th className="py-2 px-4 text-left">Apellido</th>
+                  <th className="py-2 px-4 text-left">DNI</th>
+                  <th className="py-2 px-4 text-left">Email</th>
+                  <th className="py-2 px-4 text-left">Usuario</th>
+                  <th className="py-2 px-4 text-left">Tipo</th>
+                  <th className="py-2 px-4 text-left">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usuarios.map((u) => (
+                  <tr key={u.id} className="border-t hover:bg-gray-50">
+                    <td className="py-2 px-4">{u.firstName}</td>
+                    <td className="py-2 px-4">{u.lastName}</td>
+                    <td className="py-2 px-4">{u.dni}</td>
+                    <td className="py-2 px-4">{u.email}</td>
+                    <td className="py-2 px-4">{u.username}</td>
+                    <td className="py-2 px-4 capitalize">{u.type}</td>
+                    <td className="py-2 px-4">
+                      {resettingPassword === u.id ? (
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-700">
+                            ¿Confirmar restablecimiento?
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() =>
+                                handleResetPassword(
+                                  u.id,
+                                  `${u.firstName} ${u.lastName}`
+                                )
+                              }
+                              className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                            >
+                              Sí
+                            </button>
+                            <button
+                              onClick={() => setResettingPassword(null)}
+                              className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
+                            >
+                              No
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <span
+                          onClick={() => setResettingPassword(u.id)}
+                          className="text-red-600 cursor-pointer hover:underline text-sm"
+                        >
+                          Restablecer Contraseña
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Vista de cards para móvil */}
+          <div className="block lg:hidden space-y-4">
+            {usuarios.map((u) => (
+              <div key={u.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Nombre:</span>
+                    <span>{u.firstName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Apellido:</span>
+                    <span>{u.lastName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">DNI:</span>
+                    <span>{u.dni}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Email:</span>
+                    <span className="text-sm break-all">{u.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Usuario:</span>
+                    <span>{u.username}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Tipo:</span>
+                    <span className="capitalize">{u.type}</span>
+                  </div>
+                  <div className="pt-2 border-t">
                     {resettingPassword === u.id ? (
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-700">
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-700 text-center">
                           ¿Confirmar restablecimiento?
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 justify-center">
                           <button
                             onClick={() =>
                               handleResetPassword(
@@ -269,19 +341,19 @@ export default function ListaUsuarios() {
                         </div>
                       </div>
                     ) : (
-                      <span
+                      <button
                         onClick={() => setResettingPassword(u.id)}
-                        className="text-red-600 cursor-pointer hover:underline text-sm"
+                        className="w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 text-sm"
                       >
                         Restablecer Contraseña
-                      </span>
+                      </button>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -296,85 +368,87 @@ export default function ListaUsuarios() {
 
   return (
     <motion.div
-      className="mx-auto p-0 bg-white rounded-lg shadow mt-0"
-      initial={{ opacity: 0, x: -50 }} // arranca invisible y un poco a la izquierda
-      animate={{ opacity: 1, x: 0 }} // entra deslizándose al centro
-      exit={{ opacity: 0, x: 50 }} // cuando salga, se desliza a la derecha
+      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 50 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-teal-800">Panel de Usuarios</h2>
-        <button
-          onClick={() => navigate("/registro")}
-          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow"
-        >
-          + Agregar Usuario
-        </button>
-      </div>
+      <div className="py-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-800">Panel de Usuarios</h2>
+          <button
+            onClick={() => navigate("/registro")}
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
+          >
+            + Agregar Usuario
+          </button>
+        </div>
 
-      {message && (
-        <div
-          className={`p-4 mb-4 rounded-lg border text-sm ${
-            message.type === "success"
-              ? "bg-green-100 text-green-800 border-green-300"
-              : "bg-red-100 text-red-800 border-red-300"
-          }`}
-        >
-          <div className="flex justify-between items-center">
-            <span>{message.text}</span>
-            <button onClick={() => setMessage(null)} className="font-bold px-2">
-              ×
-            </button>
+        {message && (
+          <div
+            className={`p-4 mb-4 rounded-lg border text-sm ${
+              message.type === "success"
+                ? "bg-green-100 text-green-800 border-green-300"
+                : "bg-red-100 text-red-800 border-red-300"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span>{message.text}</span>
+              <button onClick={() => setMessage(null)} className="font-bold px-2">
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+            <input
+              type="text"
+              placeholder="Buscar por nombre o apellido..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setProfesores(prev => ({ ...prev, page: 0 }));
+                setEstudiantes(prev => ({ ...prev, page: 0 }));
+              }}
+              className="w-full sm:max-w-sm px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="w-full sm:w-auto bg-gray-500 text-white px-4 py-2 rounded-md text-sm"
+              >
+                Limpiar
+              </button>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="mb-6 text-center">
-        <input
-          type="text"
-          placeholder="Buscar por nombre o apellido..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setProfesores(prev => ({ ...prev, page: 0 }));
-            setEstudiantes(prev => ({ ...prev, page: 0 }));
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-md w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-        />
         {searchTerm && (
-          <button
-            onClick={() => setSearchTerm("")}
-            className="ml-2 bg-gray-500 text-white px-3 py-2 rounded-md"
-          >
-            Limpiar
-          </button>
+          <p className="text-center text-gray-600 mb-4">
+            Mostrando resultados para: "{searchTerm}" 
+            (Profesores: {profesores.users.length}, Estudiantes: {estudiantes.users.length})
+          </p>
         )}
+
+        {/* Sección Profesores */}
+        <UserTable usuarios={profesoresFiltrados} titulo="Profesores" />
+        <PaginationControls 
+          tipo="Profesores" 
+          state={profesores} 
+          setState={setProfesores} 
+        />
+
+        {/* Sección Estudiantes */}
+        <UserTable usuarios={estudiantesFiltrados} titulo="Estudiantes" />
+        <PaginationControls 
+          tipo="Estudiantes" 
+          state={estudiantes} 
+          setState={setEstudiantes} 
+        />
       </div>
-
-      {searchTerm && (
-        <p className="text-center text-gray-600 mb-4">
-          Mostrando resultados para: "{searchTerm}" 
-          (Profesores: {profesores.users.length}, Estudiantes: {estudiantes.users.length})
-        </p>
-      )}
-
-      {/* Sección Profesores */}
-      <UserTable usuarios={profesoresFiltrados} titulo="Profesores" />
-      <PaginationControls 
-        tipo="Profesores" 
-        state={profesores} 
-        setState={setProfesores} 
-      />
-
-      {/* Sección Estudiantes */}
-      <UserTable usuarios={estudiantesFiltrados} titulo="Estudiantes" />
-      <PaginationControls 
-        tipo="Estudiantes" 
-        state={estudiantes} 
-        setState={setEstudiantes} 
-      />
-    </div>
     </motion.div>
   );
 }

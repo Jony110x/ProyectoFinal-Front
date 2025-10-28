@@ -57,7 +57,6 @@ export default function BandejaMensajes() {
     }
   };
 
-  // Búsqueda de usuarios con paginación
   const buscarUsuarios = async (termino: string, pageNum = 1) => {
     if (!termino.trim()) {
       setUsuariosBusqueda([]);
@@ -85,7 +84,6 @@ export default function BandejaMensajes() {
     }
   };
 
-  // useEffect para búsqueda con debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -95,7 +93,6 @@ export default function BandejaMensajes() {
     return () => clearTimeout(timer);
   }, [nuevoDestinatario]);
 
-  // useEffect para infinite scroll con IntersectionObserver
   useEffect(() => {
     if (!hasMore) return;
 
@@ -115,7 +112,6 @@ export default function BandejaMensajes() {
     };
   }, [hasMore, nuevoDestinatario]);
 
-  // cada vez que page cambia, pedimos más
   useEffect(() => {
     if (page > 1) {
       buscarUsuarios(nuevoDestinatario, page);
@@ -243,236 +239,240 @@ export default function BandejaMensajes() {
 
   return (
     <motion.div
-      className="mx-auto p-0 bg-white rounded-lg shadow mt-0"
-      initial={{ opacity: 0, x: -50 }} // arranca invisible y un poco a la izquierda
-      animate={{ opacity: 1, x: 0 }} // entra deslizándose al centro
-      exit={{ opacity: 0, x: 50 }} // cuando salga, se desliza a la derecha
+      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 50 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-    <div className="min-h-screen bg-gray-100 pt-2 px-4 pb-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Conversaciones */}
-        <div className="w-full md:w-1/3 bg-white shadow-md rounded-lg p-4 max-h-[85vh] flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold text-teal-800">Conversaciones</h2>
-            <button
-              onClick={() => setMostrarNuevaConv(!mostrarNuevaConv)}
-              className="text-green-700 hover:underline text-ml"
-            >
-              Nueva +
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Buscar chat..."
-            value={searchChat}
-            onChange={(e) => setSearchChat(e.target.value)}
-            className="mb-3 px-2 py-1 border rounded w-full"
-          />
-
-          {mostrarNuevaConv && (
-            <div className="mb-3 flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="Buscar usuario..."
-                value={nuevoDestinatario}
-                onChange={(e) => setNuevoDestinatario(e.target.value)}
-                className="border p-1 rounded w-full"
-              />
-              <div className="border max-h-40 overflow-y-auto">
-                {nuevoDestinatario.trim() ? (
-                  usuariosBusqueda.length > 0 ? (
-                    <>
-                      {usuariosBusqueda.map((u) => (
-                        <div
-                          key={u.id}
-                          onClick={() => iniciarConversacion(u.id)}
-                          className="p-2 cursor-pointer hover:bg-teal-100"
-                        >
-                          {u.nombre} ({u.type})
-                        </div>
-                      ))}
-                      {hasMore && <div ref={observerRef} className="h-8" />}
-                    </>
-                  ) : (
-                    <div className="p-2 text-gray-500 text-sm">
-                      {nuevoDestinatario.length < 2
-                        ? "Escribí al menos 2 caracteres..."
-                        : "No se encontraron usuarios"}
-                    </div>
-                  )
-                ) : (
-                  usuariosSinConversacion.map((u) => (
-                    <div
-                      key={u.id}
-                      onClick={() => iniciarConversacion(u.id)}
-                      className="p-2 cursor-pointer hover:bg-teal-100"
-                    >
-                      {u.nombre} ({u.type})
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="overflow-y-auto flex-grow">
-            {conversacionesConMensajes.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setConversacionSeleccionada(conv.id)}
-                className={`flex items-center gap-3 p-2 mb-1 rounded cursor-pointer hover:bg-teal-100 ${
-                  conversacionSeleccionada === conv.id ? "bg-teal-200" : ""
-                }`}
+      <div className="min-h-screen bg-gray-100 py-4 px-2 sm:px-4">
+        <div className="flex flex-col lg:flex-row gap-4 h-[85vh]">
+          {/* Conversaciones */}
+          <div className="w-full lg:w-1/3 bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-bold text-teal-800">Conversaciones</h2>
+              <button
+                onClick={() => setMostrarNuevaConv(!mostrarNuevaConv)}
+                className="text-green-700 hover:underline text-sm"
               >
-                <div className="w-10 h-10 flex items-center justify-center bg-teal-600 text-white rounded-full text-lg font-bold">
-                  {conv.nombre.charAt(0)}
+                Nueva +
+              </button>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Buscar chat..."
+              value={searchChat}
+              onChange={(e) => setSearchChat(e.target.value)}
+              className="mb-3 px-2 py-2 border rounded w-full text-sm"
+            />
+
+            {mostrarNuevaConv && (
+              <div className="mb-3 flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Buscar usuario..."
+                  value={nuevoDestinatario}
+                  onChange={(e) => setNuevoDestinatario(e.target.value)}
+                  className="border p-2 rounded w-full text-sm"
+                />
+                <div className="border max-h-40 overflow-y-auto">
+                  {nuevoDestinatario.trim() ? (
+                    usuariosBusqueda.length > 0 ? (
+                      <>
+                        {usuariosBusqueda.map((u) => (
+                          <div
+                            key={u.id}
+                            onClick={() => iniciarConversacion(u.id)}
+                            className="p-2 cursor-pointer hover:bg-teal-100 text-sm"
+                          >
+                            {u.nombre} ({u.type})
+                          </div>
+                        ))}
+                        {hasMore && <div ref={observerRef} className="h-8" />}
+                      </>
+                    ) : (
+                      <div className="p-2 text-gray-500 text-sm">
+                        {nuevoDestinatario.length < 2
+                          ? "Escribí al menos 2 caracteres..."
+                          : "No se encontraron usuarios"}
+                      </div>
+                    )
+                  ) : (
+                    usuariosSinConversacion.map((u) => (
+                      <div
+                        key={u.id}
+                        onClick={() => iniciarConversacion(u.id)}
+                        className="p-2 cursor-pointer hover:bg-teal-100 text-sm"
+                      >
+                        {u.nombre} ({u.type})
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="flex-grow">
-                  <div className="font-semibold text-teal-800">{conv.nombre}</div>
-                  <div className="text-sm text-gray-600 truncate">
-                    {conv.ultimoMensaje}
+              </div>
+            )}
+
+            <div className="overflow-y-auto flex-grow">
+              {conversacionesConMensajes.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => setConversacionSeleccionada(conv.id)}
+                  className={`flex items-center gap-3 p-2 mb-1 rounded cursor-pointer hover:bg-teal-100 ${
+                    conversacionSeleccionada === conv.id ? "bg-teal-200" : ""
+                  }`}
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-teal-600 text-white rounded-full text-sm sm:text-lg font-bold">
+                    {conv.nombre.charAt(0)}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="font-semibold text-teal-800 text-sm sm:text-base truncate">
+                      {conv.nombre}
+                    </div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {conv.ultimoMensaje}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Mensajes */}
-        <div className="w-full md:flex-1 bg-white shadow-md rounded-lg p-4 flex flex-col max-h-[85vh]">
-          {conversacionSeleccionada ? (
-            <>
-              <div className="flex justify-between mb-2">
-                <h3 className="font-bold text-teal-800">Chat</h3>
-                <button
-                  onClick={eliminarChat}
-                  className="text-red-600 hover:underline flex items-center gap-1"
+          {/* Mensajes */}
+          <div className="w-full lg:flex-1 bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col">
+            {conversacionSeleccionada ? (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                  <h3 className="font-bold text-teal-800 text-lg">Chat</h3>
+                  <button
+                    onClick={eliminarChat}
+                    className="text-red-600 hover:underline flex items-center gap-1 text-sm"
+                  >
+                    <FaTrash className="text-xs" /> Eliminar chat
+                  </button>
+                </div>
+
+                <div
+                  ref={mensajeRef}
+                  className="flex-grow overflow-y-auto mb-3 p-2 border rounded"
+                  style={{ maxHeight: "400px" }}
                 >
-                  <FaTrash /> Eliminar chat
-                </button>
-              </div>
-
-              <div
-                ref={mensajeRef}
-                className="flex-grow overflow-y-auto mb-3"
-                style={{ maxHeight: "400px" }}
-              >
-                {mensajes
-                  .filter(
-                    (msg) =>
-                      (msg.sender_id === conversacionSeleccionada && msg.receiver_id === user.id) ||
-                      (msg.sender_id === user.id && msg.receiver_id === conversacionSeleccionada)
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-                  )
-                  .map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-2 my-1 rounded-lg max-w-xs relative ${
-                        msg.sender_id === user.id
-                          ? "bg-teal-100 ml-auto"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      <strong>{msg.sender_id === user.id ? "Yo" : msg.sender_name}</strong>
-                      {msg.file_url && (
-                        <div className="mt-1 mb-1">
-                          <a
-                            href={msg.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 underline flex items-center gap-1 text-sm"
+                  {mensajes
+                    .filter(
+                      (msg) =>
+                        (msg.sender_id === conversacionSeleccionada && msg.receiver_id === user.id) ||
+                        (msg.sender_id === user.id && msg.receiver_id === conversacionSeleccionada)
+                    )
+                    .sort(
+                      (a, b) =>
+                        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                    )
+                    .map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`p-2 my-1 rounded-lg max-w-xs sm:max-w-md relative ${
+                          msg.sender_id === user.id
+                            ? "bg-teal-100 ml-auto"
+                            : "bg-gray-100"
+                        }`}
+                      >
+                        <strong className="text-sm">{msg.sender_id === user.id ? "Yo" : msg.sender_name}</strong>
+                        {msg.file_url && (
+                          <div className="mt-1 mb-1">
+                            <a
+                              href={msg.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 underline flex items-center gap-1 text-xs"
+                            >
+                              <FaPaperclip />
+                              {obtenerNombreArchivo(msg.file_url)}
+                            </a>
+                          </div>
+                        )}
+                        {msg.content && <div className="mt-1 text-sm">{msg.content}</div>}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(msg.timestamp).toLocaleString()}
+                        </div>
+                        {msg.sender_id === user.id && (
+                          <button
+                            onClick={() => eliminarMensaje(msg.id, msg.timestamp)}
+                            className="absolute top-1 right-1 text-red-500 text-xs hover:underline"
                           >
-                            <FaPaperclip />
-                            {obtenerNombreArchivo(msg.file_url)}
-                          </a>
-                        </div>
-                      )}
-                      {msg.content && <div className="mt-1">{msg.content}</div>}
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(msg.timestamp).toLocaleString()}
+                            Eliminar
+                          </button>
+                        )}
                       </div>
-                      {msg.sender_id === user.id && (
-                        <button
-                          onClick={() => eliminarMensaje(msg.id, msg.timestamp)}
-                          className="absolute top-1 right-1 text-red-500 text-xs hover:underline"
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                  ))}
-              </div>
+                    ))}
+                </div>
 
-              {archivoAdjunto && (
-                <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FaPaperclip className="text-blue-600" />
-                      <div>
-                        <div className="text-sm font-medium text-blue-800">
-                          {archivoAdjunto.name}
-                        </div>
-                        <div className="text-xs text-blue-600">
-                          {formatearTamano(archivoAdjunto.size)}
+                {archivoAdjunto && (
+                  <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FaPaperclip className="text-blue-600 text-sm" />
+                        <div>
+                          <div className="text-sm font-medium text-blue-800">
+                            {archivoAdjunto.name}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            {formatearTamano(archivoAdjunto.size)}
+                          </div>
                         </div>
                       </div>
+                      <button
+                        onClick={removerArchivo}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Quitar archivo"
+                      >
+                        <FaTimes />
+                      </button>
                     </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={nuevoMensaje}
+                    onChange={(e) => setNuevoMensaje(e.target.value)}
+                    placeholder="Escribí un mensaje..."
+                    className="flex-grow p-2 border border-gray-300 rounded text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        enviarMensaje();
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <label className="bg-gray-200 p-2 rounded cursor-pointer hover:bg-gray-300 flex items-center text-sm">
+                      <FaPaperclip />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={manejarSeleccionArchivo}
+                        accept="*/*"
+                      />
+                    </label>
                     <button
-                      onClick={removerArchivo}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      title="Quitar archivo"
+                      onClick={enviarMensaje}
+                      className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 disabled:bg-gray-400 text-sm"
+                      disabled={!nuevoMensaje.trim() && !archivoAdjunto}
                     >
-                      <FaTimes />
+                      Enviar
                     </button>
                   </div>
                 </div>
-              )}
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={nuevoMensaje}
-                  onChange={(e) => setNuevoMensaje(e.target.value)}
-                  placeholder="Escribí un mensaje..."
-                  className="flex-grow p-2 border border-gray-300 rounded"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      enviarMensaje();
-                    }
-                  }}
-                />
-                <label className="bg-gray-200 p-2 rounded cursor-pointer hover:bg-gray-300 flex items-center">
-                  <FaPaperclip />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={manejarSeleccionArchivo}
-                    accept="*/*"
-                  />
-                </label>
-                <button
-                  onClick={enviarMensaje}
-                  className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 disabled:bg-gray-400"
-                  disabled={!nuevoMensaje.trim() && !archivoAdjunto}
-                >
-                  Enviar
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="text-gray-600 text-center mt-10">
-              Seleccioná una conversación o iniciá una nueva.
-            </p>
-          )}
+              </>
+            ) : (
+              <p className="text-gray-600 text-center mt-10 text-sm">
+                Seleccioná una conversación o iniciá una nueva.
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </motion.div>
   );
 }

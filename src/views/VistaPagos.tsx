@@ -36,7 +36,6 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
   const isAdmin = type === "admin";
   const navigate = useNavigate();
 
-  // Cargar materias (carers) una sola vez
   useEffect(() => {
     axios
       .get("https://proyectofinal-backend-1-uqej.onrender.com/carer/all")
@@ -44,19 +43,17 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
       .catch((err) => console.error("Error al traer materias:", err));
   }, []);
 
-  // Cargar primeros pagos (reload = true)
   useEffect(() => {
     cargarPagos(true);
   }, [username, isAdmin]);
 
-  // Scroll infinito
   useEffect(() => {
     const handleScroll = () => {
       if (
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
         !loading &&
         nextCursor !== null &&
-        busqueda.trim() === "" // solo para scroll infinito sin búsqueda
+        busqueda.trim() === ""
       ) {
         cargarPagos(false);
       }
@@ -65,7 +62,6 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loading, nextCursor, busqueda]);
 
-  // Cargar pagos paginados
   const cargarPagos = async (reload = false) => {
     setLoading(true);
     try {
@@ -99,36 +95,33 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
     }
   };
 
-  // Buscar pagos desde backend
   const buscarPagos = async (query: string) => {
-  setBusqueda(query);
+    setBusqueda(query);
 
-  if (!query.trim()) {
-    setPagosFiltrados(pagos);
-    return;
-  }
+    if (!query.trim()) {
+      setPagosFiltrados(pagos);
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const token = localStorage.getItem("token") || "";
-    const params = new URLSearchParams({ q: query, limit: "50", offset: "0" });
-    if (!isAdmin) params.append("user_id", username);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token") || "";
+      const params = new URLSearchParams({ q: query, limit: "50", offset: "0" });
+      if (!isAdmin) params.append("user_id", username);
 
-    const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setPagosFiltrados(res.data.payments);
-  } catch (error) {
-    console.error("Error al buscar pagos:", error);
-    setMensaje("❌ Error al buscar pagos");
-  } finally {
-    setLoading(false);
-  }
-};
+      setPagosFiltrados(res.data.payments);
+    } catch (error) {
+      console.error("Error al buscar pagos:", error);
+      setMensaje("❌ Error al buscar pagos");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-
-  // Guardar pago editado
   const handleGuardarPago = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pagoEditando) return;
@@ -146,7 +139,6 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
     }
   };
 
-  // Eliminar pago
   const handleEliminarPago = async (id: number) => {
     try {
       await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/payment/${id}`);
@@ -166,120 +158,248 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
     }
   }, [mensaje]);
 
-  // Actualizar pagos filtrados cuando no hay búsqueda
   useEffect(() => {
     if (!busqueda.trim()) setPagosFiltrados(pagos);
   }, [pagos, busqueda]);
 
   return (
     <motion.div
-      className="max-w-5xl mx-auto p-0 bg-white rounded-lg shadow mt-0"
-      initial={{ opacity: 0, x: -50 }} // arranca invisible y un poco a la izquierda
-      animate={{ opacity: 1, x: 0 }} // entra deslizándose al centro
-      exit={{ opacity: 0, x: 50 }} // cuando salga, se desliza a la derecha
+      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 50 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow rounded-lg mt-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-teal-700">
-          {isAdmin ? "Todos los Pagos" : "Mis Pagos"}
-        </h2>
-        {isAdmin && (
-          <button
-            onClick={() => navigate("/pagos")}
-            className="mt-4 md:mt-0 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow"
-          >
-            + Agregar Pago
-          </button>
-        )}
-      </div>
-
-      {/* BARRA DE BUSQUEDA */}
-      <input
-        type="text"
-        placeholder="Buscar pagos..."
-        value={busqueda}
-        onChange={(e) => buscarPagos(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-teal-400"
-      />
-
-      {mensaje && (
-        <div className="mb-4 text-sm font-medium text-green-800 bg-green-100 p-3 rounded">
-          {mensaje}
+      <div className="py-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-700">
+            {isAdmin ? "Todos los Pagos" : "Mis Pagos"}
+          </h2>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/pagos")}
+              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
+            >
+              + Agregar Pago
+            </button>
+          )}
         </div>
-      )}
 
-      {pagosFiltrados.length === 0 && !loading && (
-        <p className="text-center text-gray-500">No hay pagos para mostrar.</p>
-      )}
+        {/* BARRA DE BUSQUEDA */}
+        <input
+          type="text"
+          placeholder="Buscar pagos..."
+          value={busqueda}
+          onChange={(e) => buscarPagos(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-teal-400 text-sm sm:text-base"
+        />
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-md">
-          <thead className="bg-teal-100 text-teal-800">
-            <tr>
-              <th className="py-2 px-4 text-left">ID</th>
-              {isAdmin && <th className="py-2 px-4 text-left">Usuario</th>}
-              <th className="py-2 px-4 text-left">Monto</th>
-              <th className="py-2 px-4 text-left">Mes</th>
-              <th className="py-2 px-4 text-left">Carrera</th>
-              {isAdmin && <th className="py-2 px-4 text-left">Acciones</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {pagosFiltrados.map((p, index) => (
-              <Fragment key={`${p.id}-${index}`}>
-                <tr className="border-t hover:bg-gray-50">
-                  <td className="py-2 px-4">{p.id}</td>
-                  {isAdmin && <td className="py-2 px-4">{p.username}</td>}
-                  <td className="py-2 px-4">${p.amount}</td>
-                  <td className="py-2 px-4">{p.affected_month.slice(0, 10)}</td>
-                  <td className="py-2 px-4">{p.carer}</td>
-                  {isAdmin && (
-                    <td className="py-2 px-4 align-middle">
-                      {pagoAConfirmar === p.id ? (
-                        <div className="flex gap-2">
-                          <div className="text-ml">¿?</div>
+        {mensaje && (
+          <div className="mb-4 text-sm font-medium text-green-800 bg-green-100 p-3 rounded">
+            {mensaje}
+          </div>
+        )}
+
+        {pagosFiltrados.length === 0 && !loading && (
+          <p className="text-center text-gray-500 py-8">No hay pagos para mostrar.</p>
+        )}
+
+        {/* Vista de tabla para desktop */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full border border-gray-200 rounded-md">
+            <thead className="bg-teal-100 text-teal-800">
+              <tr>
+                <th className="py-2 px-4 text-left">ID</th>
+                {isAdmin && <th className="py-2 px-4 text-left">Usuario</th>}
+                <th className="py-2 px-4 text-left">Monto</th>
+                <th className="py-2 px-4 text-left">Mes</th>
+                <th className="py-2 px-4 text-left">Carrera</th>
+                {isAdmin && <th className="py-2 px-4 text-left">Acciones</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {pagosFiltrados.map((p, index) => (
+                <Fragment key={`${p.id}-${index}`}>
+                  <tr className="border-t hover:bg-gray-50">
+                    <td className="py-2 px-4">{p.id}</td>
+                    {isAdmin && <td className="py-2 px-4">{p.username}</td>}
+                    <td className="py-2 px-4">${p.amount}</td>
+                    <td className="py-2 px-4">{p.affected_month.slice(0, 10)}</td>
+                    <td className="py-2 px-4">{p.carer}</td>
+                    {isAdmin && (
+                      <td className="py-2 px-4 align-middle">
+                        {pagoAConfirmar === p.id ? (
+                          <div className="flex gap-2">
+                            <div className="text-sm">¿?</div>
+                            <button
+                              onClick={() => handleEliminarPago(p.id)}
+                              className="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700 transition"
+                            >
+                              Si
+                            </button>
+                            <button
+                              onClick={() => setPagoAConfirmar(null)}
+                              className="bg-gray-300 text-gray-800 text-xs px-2 py-1 rounded hover:bg-gray-400 transition"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setPagoEditando(p)}
+                              className="text-blue-600 hover:underline text-sm mr-2"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => setPagoAConfirmar(p.id)}
+                              className="text-red-600 hover:underline text-sm"
+                            >
+                              Eliminar
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+
+                  {/* Formulario edición inline */}
+                  {pagoEditando?.id === p.id && (
+                    <tr className="bg-gray-100">
+                      <td colSpan={isAdmin ? 6 : 5} className="p-4">
+                        <form onSubmit={handleGuardarPago} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm mb-1">Monto</label>
+                              <input
+                                type="number"
+                                value={pagoEditando.amount}
+                                onChange={(e) =>
+                                  setPagoEditando({
+                                    ...pagoEditando,
+                                    amount: parseInt(e.target.value),
+                                  })
+                                }
+                                className="w-full border px-3 py-2 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm mb-1">Mes Afectado</label>
+                              <input
+                                type="date"
+                                value={pagoEditando.affected_month.slice(0, 10)}
+                                onChange={(e) =>
+                                  setPagoEditando({
+                                    ...pagoEditando,
+                                    affected_month: e.target.value,
+                                  })
+                                }
+                                className="w-full border px-3 py-2 rounded-md text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm mb-1">Materia</label>
+                              <select
+                                value={pagoEditando.carer_id}
+                                onChange={(e) =>
+                                  setPagoEditando({
+                                    ...pagoEditando,
+                                    carer_id: parseInt(e.target.value),
+                                    carer:
+                                      carers.find(
+                                        (c) => c.id === parseInt(e.target.value)
+                                      )?.name || "",
+                                  })
+                                }
+                                className="w-full border px-3 py-2 rounded-md text-sm"
+                              >
+                                {carers.map((carer) => (
+                                  <option key={carer.id} value={carer.id}>
+                                    {carer.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-end gap-3">
+                            <button
+                              type="submit"
+                              className="w-full sm:w-auto bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 text-sm"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPagoEditando(null)}
+                              className="w-full sm:w-auto bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 text-sm"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Vista de cards para móvil */}
+        <div className="block lg:hidden space-y-4">
+          {pagosFiltrados.map((p, index) => (
+            <div key={`${p.id}-${index}`} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold">ID:</span>
+                  <span>{p.id}</span>
+                </div>
+                {isAdmin && (
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Usuario:</span>
+                    <span>{p.username}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="font-semibold">Monto:</span>
+                  <span>${p.amount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Mes:</span>
+                  <span>{p.affected_month.slice(0, 10)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Carrera:</span>
+                  <span>{p.carer}</span>
+                </div>
+                
+                {isAdmin && (
+                  <div className="pt-3 border-t mt-2">
+                    {pagoAConfirmar === p.id ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-700 text-center">¿Eliminar pago?</p>
+                        <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => handleEliminarPago(p.id)}
-                            className="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700 transition"
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                           >
-                            Si
+                            Sí
                           </button>
                           <button
                             onClick={() => setPagoAConfirmar(null)}
-                            className="bg-gray-300 text-gray-800 text-xs px-2 py-1 rounded hover:bg-gray-400 transition"
+                            className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
                           >
                             No
                           </button>
                         </div>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => setPagoEditando(p)}
-                            className="text-blue-600 hover:underline text-sm mr-2"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => setPagoAConfirmar(p.id)}
-                            className="text-red-600 hover:underline text-sm"
-                          >
-                            Eliminar
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  )}
-                </tr>
-
-                {/* Formulario edición inline */}
-                {pagoEditando?.id === p.id && (
-                  <tr className="bg-gray-100">
-                    <td colSpan={isAdmin ? 6 : 5} className="p-4">
-                      <form onSubmit={handleGuardarPago} className="space-y-4">
-                        <div className="grid md:grid-cols-3 gap-4">
+                      </div>
+                    ) : pagoEditando?.id === p.id ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 gap-2">
                           <div>
-                            <label className="block text-sm mb-1">Monto</label>
+                            <label className="block text-xs mb-1">Monto</label>
                             <input
                               type="number"
                               value={pagoEditando.amount}
@@ -289,11 +409,11 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
                                   amount: parseInt(e.target.value),
                                 })
                               }
-                              className="w-full border px-3 py-2 rounded-md"
+                              className="w-full border px-2 py-1 rounded text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm mb-1">Mes Afectado</label>
+                            <label className="block text-xs mb-1">Mes</label>
                             <input
                               type="date"
                               value={pagoEditando.affected_month.slice(0, 10)}
@@ -303,11 +423,11 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
                                   affected_month: e.target.value,
                                 })
                               }
-                              className="w-full border px-3 py-2 rounded-md"
+                              className="w-full border px-2 py-1 rounded text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm mb-1">Materia</label>
+                            <label className="block text-xs mb-1">Materia</label>
                             <select
                               value={pagoEditando.carer_id}
                               onChange={(e) =>
@@ -320,7 +440,7 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
                                     )?.name || "",
                                 })
                               }
-                              className="w-full border px-3 py-2 rounded-md"
+                              className="w-full border px-2 py-1 rounded text-sm"
                             >
                               {carers.map((carer) => (
                                 <option key={carer.id} value={carer.id}>
@@ -330,35 +450,48 @@ export default function VistaPagos({ username, type = "estudiante" }: Props) {
                             </select>
                           </div>
                         </div>
-                        <div className="flex justify-end gap-3">
+                        <div className="flex gap-2">
                           <button
-                            type="submit"
-                            className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
+                            onClick={handleGuardarPago}
+                            className="flex-1 bg-teal-600 text-white px-3 py-2 rounded hover:bg-teal-700 text-sm"
                           >
                             Guardar
                           </button>
                           <button
-                            type="button"
                             onClick={() => setPagoEditando(null)}
-                            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                            className="flex-1 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500 text-sm"
                           >
                             Cancelar
                           </button>
                         </div>
-                      </form>
-                    </td>
-                  </tr>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPagoEditando(p)}
+                          className="flex-1 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => setPagoAConfirmar(p.id)}
+                          className="flex-1 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 text-sm"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {loading && (
-        <p className="text-center mt-4 text-gray-600">Cargando pagos...</p>
-      )}
-    </div>
+        {loading && (
+          <p className="text-center mt-4 text-gray-600">Cargando pagos...</p>
+        )}
+      </div>
     </motion.div>
   );
 }
