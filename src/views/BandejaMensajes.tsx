@@ -40,6 +40,20 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
   );
 };
 
+// Función para verificar si es imagen
+const esImagen = (url: string) => {
+  const extension = url.split('.').pop()?.toLowerCase();
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || '');
+};
+
+// Función para obtener nombre limpio del archivo
+const obtenerNombreLimpio = (url: string) => {
+  const nombreCompleto = url.split('/').pop() || 'archivo';
+  // Remover el timestamp del inicio si existe (formato: 1234567890_nombrearchivo.ext)
+  const sinTimestamp = nombreCompleto.replace(/^\d+_/, '');
+  return sinTimestamp;
+};
+
 export default function BandejaMensajes() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [mensajes, setMensajes] = useState<Message[]>([]);
@@ -63,7 +77,7 @@ export default function BandejaMensajes() {
 
   const showToast = (text: string, type: "success" | "error" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 3000);
   };
 
   const fetchMensajes = async () => {
@@ -196,6 +210,7 @@ export default function BandejaMensajes() {
     try {
       await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`);
       fetchMensajes();
+      showToast("✅ Mensaje eliminado", "success");
     } catch (err) {
       console.error(err);
       showToast("❌ Error al eliminar mensaje", "error");
@@ -204,14 +219,12 @@ export default function BandejaMensajes() {
 
   const eliminarChat = async () => {
     if (!conversacionSeleccionada) return;
-    
-    // Reemplazar confirm por lógica de confirmación visual si es necesario
-    // Por ahora mantenemos el confirm nativo para simplicidad
     if (!confirm("¿Seguro querés eliminar todo el chat?")) return;
     
     try {
       await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/messages/chat/${user.id}/${conversacionSeleccionada}`);
       fetchMensajes();
+      setConversacionSeleccionada(null);
       showToast("✅ Chat eliminado", "success");
     } catch (err) {
       console.error(err);
@@ -221,7 +234,14 @@ export default function BandejaMensajes() {
 
   const manejarSeleccionArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setArchivoAdjunto(file);
+    if (file) {
+      // Validar tamaño (10MB máximo)
+      if (file.size > 10 * 1024 * 1024) {
+        showToast("⚠️ El archivo no puede superar los 10MB", "warning");
+        return;
+      }
+      setArchivoAdjunto(file);
+    }
   };
 
   const removerArchivo = () => {
@@ -229,10 +249,6 @@ export default function BandejaMensajes() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
-
-  const obtenerNombreArchivo = (url: string) => {
-    return url.split("/").pop() || "archivo";
   };
 
   const formatearTamano = (bytes: number) => {
@@ -277,7 +293,6 @@ export default function BandejaMensajes() {
 
   return (
     <>
-      {/* Toast container */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -418,24 +433,43 @@ export default function BandejaMensajes() {
                               : "bg-gray-100"
                           }`}
                         >
-                          <strong className="text-sm">{msg.sender_id === user.id ? "Yo" : msg.sender_name}</strong>
+                          <strong className="text-sm">
+                            {msg.sender_id === user.id ? "Yo" : msg.sender_name}
+                          </strong>
+                          
+                          {/* Preview de archivos */}
                           {msg.file_url && (
-                            <div className="mt-1 mb-1">
-                              <a
-                                href={msg.file_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 underline flex items-center gap-1 text-xs"
-                              >
-                                <FaPaperclip />
-                                {obtenerNombreArchivo(msg.file_url)}
-                              </a>
+                            <div className="mt-2 mb-1">
+                              {esImagen(msg.file_url) ? (
+                                <a href={msg.file_url} target="_blank" rel="noreferrer">
+                                  <img 
+                                    src={msg.file_url} 
+                                    alt="imagen adjunta" 
+                                    className="max-w-full max-h-60 rounded cursor-pointer hover:opacity-90 border"
+                                  />
+                                </a>
+                              ) : (
+                                <a
+                                  href={msg.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-2 bg-white rounded border border-gray-300 hover:border-blue-400 transition-colors"
+                                >
+                                  <FaPaperclip className="text-blue-600" />
+                                  <span className="text-sm text-blue-600 underline truncate">
+                                    {obtenerNombreLimpio(msg.file_url)}
+                                  </span>
+                                </a>
+                              )}
                             </div>
                           )}
+                          
                           {msg.content && <div className="mt-1 text-sm">{msg.content}</div>}
+                          
                           <div className="text-xs text-gray-500 mt-1">
                             {new Date(msg.timestamp).toLocaleString()}
                           </div>
+                          
                           {msg.sender_id === user.id && (
                             <button
                               onClick={() => eliminarMensaje(msg.id, msg.timestamp)}
