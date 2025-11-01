@@ -21,6 +21,29 @@ interface PaginationState {
   loading: boolean;
 }
 
+// Componente Toast
+const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
+  return (
+    <motion.div
+      className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
+        type === "success" 
+          ? "bg-green-500 text-white" 
+          : type === "error"
+          ? "bg-red-500 text-white"
+          : type === "warning"
+          ? "bg-yellow-500 text-white"
+          : "bg-blue-500 text-white"
+      }`}
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{ duration: 0.3 }}
+    >
+      {message}
+    </motion.div>
+  );
+};
+
 export default function ListaUsuarios() {
   const [profesores, setProfesores] = useState<PaginationState>({
     page: 0,
@@ -38,13 +61,15 @@ export default function ListaUsuarios() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [resettingPassword, setResettingPassword] = useState<number | null>(null);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; text: string } | null>(null);
 
   const limit = 20;
   const navigate = useNavigate();
+
+  const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 1000); // 1 segundo
+  };
 
   const fetchUsuarios = async (tipo: "profesor" | "estudiante", pagina: number) => {
     try {
@@ -74,8 +99,11 @@ export default function ListaUsuarios() {
           loading: false,
         }));
       }
+      
+      
     } catch (error) {
       console.error(`Error al traer ${tipo}s:`, error);
+      showToast(`❌ Error al cargar ${tipo === 'profesor' ? 'profesores' : 'estudiantes'}`, "error");
       if (tipo === "profesor") {
         setProfesores(prev => ({ ...prev, loading: false }));
       } else {
@@ -112,8 +140,11 @@ export default function ListaUsuarios() {
           loading: false,
         }));
       }
+      
+      
     } catch (error) {
       console.error(`Error al buscar ${tipo}s:`, error);
+      showToast(`❌ Error al buscar ${tipo === 'profesor' ? 'profesores' : 'estudiantes'}`, "error");
       if (tipo === "profesor") {
         setProfesores(prev => ({ ...prev, loading: false }));
       } else {
@@ -140,7 +171,6 @@ export default function ListaUsuarios() {
 
   const handleResetPassword = async (userId: number, userName: string) => {
     setResettingPassword(userId);
-    setMessage(null);
 
     try {
       const token = localStorage.getItem("token");
@@ -151,21 +181,23 @@ export default function ListaUsuarios() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setMessage({
-        type: "success",
-        text: `Contraseña restablecida para ${userName}. Nueva: ${defaultPassword}`,
-      });
-      setTimeout(() => setMessage(null), 5000);
+      showToast(`✅ Contraseña restablecida para ${userName}. Nueva: ${defaultPassword}`, "success");
     } catch (error) {
       console.error("Error al restablecer contraseña:", error);
-      setMessage({
-        type: "error",
-        text: `No se pudo restablecer la contraseña de ${userName}.`,
-      });
-      setTimeout(() => setMessage(null), 5000);
+      showToast(`❌ No se pudo restablecer la contraseña de ${userName}`, "error");
     } finally {
       setResettingPassword(null);
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+  };
+
+  const handleNavigateToRegister = () => {
+    setTimeout(() => {
+      navigate("/registro");
+    }, 300);
   };
 
   const profesoresFiltrados = profesores.users;
@@ -263,7 +295,9 @@ export default function ListaUsuarios() {
                               Sí
                             </button>
                             <button
-                              onClick={() => setResettingPassword(null)}
+                              onClick={() => {
+                                setResettingPassword(null);
+                              }}
                               className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
                             >
                               No
@@ -333,7 +367,9 @@ export default function ListaUsuarios() {
                             Sí
                           </button>
                           <button
-                            onClick={() => setResettingPassword(null)}
+                            onClick={() => {
+                              setResettingPassword(null);
+                            }}
                             className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
                           >
                             No
@@ -367,88 +403,76 @@ export default function ListaUsuarios() {
   }
 
   return (
-    <motion.div
-      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 50 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      <div className="py-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-teal-800">Panel de Usuarios</h2>
-          <button
-            onClick={() => navigate("/registro")}
-            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
-          >
-            + Agregar Usuario
-          </button>
-        </div>
+    <>
+      {/* Toast container */}
+      {toast && <Toast message={toast.text} type={toast.type} />}
+      
+      <motion.div
+        className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 50 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-teal-800">Panel de Usuarios</h2>
+            <button
+              onClick={handleNavigateToRegister}
+              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
+            >
+              + Agregar Usuario
+            </button>
+          </div>
 
-        {message && (
-          <div
-            className={`p-4 mb-4 rounded-lg border text-sm ${
-              message.type === "success"
-                ? "bg-green-100 text-green-800 border-green-300"
-                : "bg-red-100 text-red-800 border-red-300"
-            }`}
-          >
-            <div className="flex justify-between items-center">
-              <span>{message.text}</span>
-              <button onClick={() => setMessage(null)} className="font-bold px-2">
-                ×
-              </button>
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+              <input
+                type="text"
+                placeholder="Buscar por nombre o apellido..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setProfesores(prev => ({ ...prev, page: 0 }));
+                  setEstudiantes(prev => ({ ...prev, page: 0 }));
+                }}
+                className="w-full sm:max-w-sm px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="w-full sm:w-auto bg-gray-500 text-white px-4 py-2 rounded-md text-sm"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
           </div>
-        )}
 
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
-            <input
-              type="text"
-              placeholder="Buscar por nombre o apellido..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setProfesores(prev => ({ ...prev, page: 0 }));
-                setEstudiantes(prev => ({ ...prev, page: 0 }));
-              }}
-              className="w-full sm:max-w-sm px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="w-full sm:w-auto bg-gray-500 text-white px-4 py-2 rounded-md text-sm"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
+          {searchTerm && (
+            <p className="text-center text-gray-600 mb-4">
+              Mostrando resultados para: "{searchTerm}" 
+              (Profesores: {profesores.users.length}, Estudiantes: {estudiantes.users.length})
+            </p>
+          )}
+
+          {/* Sección Profesores */}
+          <UserTable usuarios={profesoresFiltrados} titulo="Profesores" />
+          <PaginationControls 
+            tipo="Profesores" 
+            state={profesores} 
+            setState={setProfesores} 
+          />
+
+          {/* Sección Estudiantes */}
+          <UserTable usuarios={estudiantesFiltrados} titulo="Estudiantes" />
+          <PaginationControls 
+            tipo="Estudiantes" 
+            state={estudiantes} 
+            setState={setEstudiantes} 
+          />
         </div>
-
-        {searchTerm && (
-          <p className="text-center text-gray-600 mb-4">
-            Mostrando resultados para: "{searchTerm}" 
-            (Profesores: {profesores.users.length}, Estudiantes: {estudiantes.users.length})
-          </p>
-        )}
-
-        {/* Sección Profesores */}
-        <UserTable usuarios={profesoresFiltrados} titulo="Profesores" />
-        <PaginationControls 
-          tipo="Profesores" 
-          state={profesores} 
-          setState={setProfesores} 
-        />
-
-        {/* Sección Estudiantes */}
-        <UserTable usuarios={estudiantesFiltrados} titulo="Estudiantes" />
-        <PaginationControls 
-          tipo="Estudiantes" 
-          state={estudiantes} 
-          setState={setEstudiantes} 
-        />
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

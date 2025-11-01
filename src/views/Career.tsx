@@ -8,6 +8,25 @@ type CareerType = {
   name: string;
 };
 
+// Componente Toast
+const Toast = ({ message, type }: { message: string; type: "success" | "error" }) => {
+  return (
+    <motion.div
+      className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
+        type === "success" 
+          ? "bg-green-500 text-white" 
+          : "bg-red-500 text-white"
+      }`}
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{ duration: 0.3 }}
+    >
+      {message}
+    </motion.div>
+  );
+};
+
 export default function Career() {
   const [careers, setCareers] = useState<CareerType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,13 +35,8 @@ export default function Career() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
-  const [deleteCareerConfirmId, setDeleteCareerConfirmId] = useState<
-    number | null
-  >(null);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [deleteCareerConfirmId, setDeleteCareerConfirmId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -34,14 +48,15 @@ export default function Career() {
       setCareers(res.data);
     } catch {
       setError("Error al cargar carreras");
+      showToast("❌ Error al cargar carreras", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const showTempMessage = (text: string, type: "success" | "error") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage(null), 3000);
+  const showToast = (text: string, type: "success" | "error") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 1000); // 1 segundo
   };
 
   const handleAddCareer = async () => {
@@ -53,9 +68,9 @@ export default function Career() {
       setNewCareerName("");
       fetchCareers();
       setShowForm(false);
-      showTempMessage("✅ Carrera agregada con éxito", "success");
+      showToast("✅ Carrera agregada con éxito", "success");
     } catch {
-      showTempMessage("❌ Error al agregar carrera", "error");
+      showToast("❌ Error al agregar carrera", "error");
     }
   };
 
@@ -67,9 +82,9 @@ export default function Career() {
       setEditId(null);
       setEditName("");
       fetchCareers();
-      showTempMessage("✅ Carrera editada correctamente", "success");
+      showToast("✅ Carrera editada correctamente", "success");
     } catch {
-      showTempMessage("❌ Error al editar carrera", "error");
+      showToast("❌ Error al editar carrera", "error");
     }
   };
 
@@ -78,9 +93,9 @@ export default function Career() {
       await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/career/${careerId}/delete`);
       setCareers((prev) => prev.filter((c) => c.id !== careerId));
       setDeleteCareerConfirmId(null);
-      showTempMessage("✅ Carrera eliminada", "success");
+      showToast("✅ Carrera eliminada", "success");
     } catch {
-      showTempMessage("❌ Error al eliminar carrera", "error");
+      showToast("❌ Error al eliminar carrera", "error");
     }
   };
 
@@ -96,169 +111,162 @@ export default function Career() {
   if (error) return <p className="text-red-600">{error}</p>;
 
   return (
-    <motion.div
-      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 50 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      <div className="py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-teal-800 flex-1 text-center">
-            Listado de Carreras
-          </h2>
-        </div>
-        {userType === "admin" && (
-          <span className="text-sm text-center sm:text-left text-teal-700 block mb-4">
-            Seleccioná una carrera para ver el listado de materias disponibles.
-          </span>
-        )}
-
-        {message && (
-          <div
-            className={`mb-4 text-center px-4 py-2 rounded ${
-              message.type === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {message.text}
+    <>
+      {/* Toast container */}
+      {toast && <Toast message={toast.text} type={toast.type} />}
+      
+      <motion.div
+        className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 50 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-teal-800 flex-1 text-center">
+              Listado de Carreras
+            </h2>
           </div>
-        )}
-
-        {userType === "estudiante" && (
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 text-sm text-teal-700 gap-2">
-            <span className="text-center sm:text-left">
+          {userType === "admin" && (
+            <span className="text-sm text-center sm:text-left text-teal-700 block mb-4">
               Seleccioná una carrera para ver el listado de materias disponibles.
             </span>
-            <button
-              onClick={() => navigate(-1)}
-              className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
-            >
-              Volver
-            </button>
-          </div>
-        )}
+          )}
 
-        <ul className="divide-y divide-gray-200">
-          {careers.map((career) => (
-            <li
-              key={career.id}
-              className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
-            >
-              <div className="flex-1 flex items-center gap-2">
-                <span className="text-xl"></span>
-                {editId === career.id ? (
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="border px-2 py-1 rounded w-full"
-                    autoFocus
-                  />
-                ) : (
-                  <Link
-                    to={`/career/${career.id}/materia`}
-                    className="text-teal-700 font-medium hover:underline text-base sm:text-lg"
-                  >
-                    {career.name}
-                  </Link>
-                )}
-              </div>
-
-              {userType === "admin" && (
-                <div className="flex items-center gap-2 flex-wrap justify-end w-full sm:w-auto">
-                  {editId === career.id ? (
-                    <button
-                      onClick={() => handleEditCareer(career.id)}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Guardar
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditId(career.id);
-                        setEditName(career.name);
-                      }}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      Editar
-                    </button>
-                  )}
-
-                  {deleteCareerConfirmId === career.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">¿Seguro?</span>
-                      <button
-                        onClick={() => confirmDeleteCareer(career.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                      >
-                        Sí
-                      </button>
-                      <button
-                        onClick={() => setDeleteCareerConfirmId(null)}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-sm"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setDeleteCareerConfirmId(career.id)}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      Eliminar
-                    </button>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {userType === "admin" && !showForm && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow text-sm sm:text-base"
-            >
-              + Agregar Carrera
-            </button>
-          </div>
-        )}
-
-        {userType === "admin" && showForm && (
-          <div className="mt-6 space-y-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={newCareerName}
-              onChange={(e) => setNewCareerName(e.target.value)}
-              placeholder="Nombre de la carrera"
-              className="w-full border px-3 py-2 rounded text-sm sm:text-base"
-            />
-            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+          {userType === "estudiante" && (
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 text-sm text-teal-700 gap-2">
+              <span className="text-center sm:text-left">
+                Seleccioná una carrera para ver el listado de materias disponibles.
+              </span>
               <button
-                onClick={handleAddCareer}
-                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm sm:text-base"
+                onClick={() => navigate(-1)}
+                className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded shadow text-sm"
               >
-                Guardar
-              </button>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setNewCareerName("");
-                }}
-                className="w-full sm:w-auto bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm sm:text-base"
-              >
-                Cancelar
+                Volver
               </button>
             </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
+          )}
+
+          <ul className="divide-y divide-gray-200">
+            {careers.map((career) => (
+              <li
+                key={career.id}
+                className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+              >
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-xl"></span>
+                  {editId === career.id ? (
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="border px-2 py-1 rounded w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <Link
+                      to={`/career/${career.id}/materia`}
+                      className="text-teal-700 font-medium hover:underline text-base sm:text-lg"
+                    >
+                      {career.name}
+                    </Link>
+                  )}
+                </div>
+
+                {userType === "admin" && (
+                  <div className="flex items-center gap-2 flex-wrap justify-end w-full sm:w-auto">
+                    {editId === career.id ? (
+                      <button
+                        onClick={() => handleEditCareer(career.id)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Guardar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditId(career.id);
+                          setEditName(career.name);
+                        }}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Editar
+                      </button>
+                    )}
+
+                    {deleteCareerConfirmId === career.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">¿Seguro?</span>
+                        <button
+                          onClick={() => confirmDeleteCareer(career.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                        >
+                          Sí
+                        </button>
+                        <button
+                          onClick={() => setDeleteCareerConfirmId(null)}
+                          className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-sm"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteCareerConfirmId(career.id)}
+                        className="text-red-600 hover:underline text-sm"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {userType === "admin" && !showForm && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setShowForm(true)}
+                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded shadow text-sm sm:text-base"
+              >
+                + Agregar Carrera
+              </button>
+            </div>
+          )}
+
+          {userType === "admin" && showForm && (
+            <div className="mt-6 space-y-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={newCareerName}
+                onChange={(e) => setNewCareerName(e.target.value)}
+                placeholder="Nombre de la carrera"
+                className="w-full border px-3 py-2 rounded text-sm sm:text-base"
+              />
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                <button
+                  onClick={handleAddCareer}
+                  className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm sm:text-base"
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setNewCareerName("");
+                  }}
+                  className="w-full sm:w-auto bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm sm:text-base"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }
