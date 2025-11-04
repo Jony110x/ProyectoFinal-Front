@@ -9,6 +9,29 @@ interface User {
   type?: "admin" | "estudiante" | "profesor";
 }
 
+// Componente Toast
+const Toast = ({ message, type }: { message: string; type: "success" | "error" | "warning" }) => {
+  return (
+    <motion.div
+      className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
+        type === "success" 
+          ? "bg-green-500 text-white" 
+          : type === "error"
+          ? "bg-red-500 text-white"
+          : type === "warning"
+          ? "bg-yellow-500 text-white"
+          : "bg-blue-500 text-white"
+      }`}
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{ duration: 0.3 }}
+    >
+      {message}
+    </motion.div>
+  );
+};
+
 const RegistroUsuario: React.FC = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -20,13 +43,17 @@ const RegistroUsuario: React.FC = () => {
     type: "estudiante",
   });
 
-  const [mensaje, setMensaje] = useState<string | null>(null);
-  const [mensajeTipo, setMensajeTipo] = useState<"success" | "error">("success");
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ type: "success" | "error" | "warning"; text: string } | null>(null);
 
   const navigate = useNavigate();
+
+  const showToast = (text: string, type: "success" | "error" | "warning") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 1000); // 1 segundo
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -38,12 +65,10 @@ const RegistroUsuario: React.FC = () => {
       try {
         setUser(JSON.parse(storedUser));
       } catch {
-        setMensaje("Error al obtener datos del usuario");
-        setMensajeTipo("error");
+        showToast("❌ Error al obtener datos del usuario", "error");
       }
     } else {
-      setMensaje("No hay datos de usuario disponibles");
-      setMensajeTipo("error");
+      showToast("❌ No hay datos de usuario disponibles", "error");
     }
 
     setLoading(false);
@@ -51,8 +76,7 @@ const RegistroUsuario: React.FC = () => {
 
   useEffect(() => {
     if (!loading && (!user || user.type !== "admin")) {
-      setMensaje("No tienes permisos para acceder a esta sección");
-      setMensajeTipo("error");
+       showToast("❌ No tienes permisos para acceder a esta sección", "error");
     }
   }, [user, loading]);
 
@@ -64,8 +88,7 @@ const RegistroUsuario: React.FC = () => {
     e.preventDefault();
 
     if (!token) {
-      setMensaje("Token no disponible. Iniciá sesión de nuevo.");
-      setMensajeTipo("error");
+      showToast("❌ Token no disponible. Iniciá sesión de nuevo", "error");
       return;
     }
 
@@ -78,30 +101,26 @@ const RegistroUsuario: React.FC = () => {
       });
 
       if (res.data.detail === "Usuario agregado correctamente") {
-        setMensaje("Usuario registrado exitosamente");
-        setMensajeTipo("success");
+         showToast("✅ Usuario registrado exitosamente", "success");
 
         setTimeout(() => {
           navigate("/usuarios");
         }, 1500);
 
       } else {
-        setMensaje(res.data.detail || "Error desconocido al registrar");
-        setMensajeTipo("error");
+         showToast("❌ Erro desconocido al registrar", "error");
       }
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
       if (detail?.includes("usuario")) {
-        setMensaje("El nombre de usuario ya está en uso.");
+        showToast("⚠️ El nombre de usuario ya está en uso", "warning");
       } else if (detail?.includes("email")) {
-        setMensaje("El email ya está registrado.");
+        showToast("⚠️ El email ya está registrado", "warning");
       } else if (detail?.includes("DNI")) {
-        setMensaje("El DNI ya existe.");
+        showToast("⚠️ El DNI ya existe", "warning");
       } else {
-        setMensaje("Error al registrar el usuario.");
+        showToast("❌ Erro al registrar el usuario", "error");
       }
-
-      setMensajeTipo("error");
     }
   };
 
@@ -120,10 +139,10 @@ const RegistroUsuario: React.FC = () => {
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-      >
+      > 
+      
         <div className="p-6 text-center">
           <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-4">Acceso Denegado</h3>
-          <p className="text-red-600 mb-2">{mensaje}</p>
           <p className="text-gray-600">Solo los administradores pueden acceder a esta sección.</p>
           <button
             onClick={() => navigate("/dashboard")}
@@ -146,6 +165,8 @@ const RegistroUsuario: React.FC = () => {
   ];
 
   return (
+    <>
+    {toast && <Toast message={toast.text} type={toast.type} />}
     <motion.div
       className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
       initial={{ opacity: 0, x: -50 }}
@@ -219,18 +240,6 @@ const RegistroUsuario: React.FC = () => {
             </button>
           </div>
 
-          {mensaje && (
-            <div
-              className={`mt-4 sm:mt-6 text-center text-sm font-medium p-3 sm:p-4 rounded-lg ${
-                mensajeTipo === "success" 
-                  ? "bg-green-100 text-green-800 border border-green-200" 
-                  : "bg-red-100 text-red-800 border border-red-200"
-              }`}
-            >
-              {mensaje}
-            </div>
-          )}
-
           {/* Información adicional para móvil */}
           <div className="mt-4 sm:hidden text-xs text-gray-500 text-center">
             <p>Completá todos los campos para registrar un nuevo usuario</p>
@@ -238,6 +247,7 @@ const RegistroUsuario: React.FC = () => {
         </form>
       </div>
     </motion.div>
+    </>
   );
 };
 
