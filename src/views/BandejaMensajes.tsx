@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { FaPaperclip, FaTrash, FaTimes } from "react-icons/fa";
-import { motion } from "framer-motion";
 
 interface Message {
   id: number;
@@ -19,38 +18,36 @@ interface UsuarioChat {
   type: string;
 }
 
-// Componente Toast
-const Toast = ({ message, type }: { message: string; type: "success" | "error" | "warning" }) => {
+const Toast = ({
+  message,
+  type,
+}: {
+  message: string;
+  type: "success" | "error" | "warning";
+}) => {
   return (
-    <motion.div
+    <div
       className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
-        type === "success" 
-          ? "bg-green-500 text-white" 
+        type === "success"
+          ? "bg-green-500 text-white"
           : type === "error"
           ? "bg-red-500 text-white"
           : "bg-yellow-500 text-white"
       }`}
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 100 }}
-      transition={{ duration: 0.3 }}
     >
       {message}
-    </motion.div>
+    </div>
   );
 };
 
-// Función para verificar si es imagen
 const esImagen = (url: string) => {
-  const extension = url.split('.').pop()?.toLowerCase();
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || '');
+  const extension = url.split(".").pop()?.toLowerCase();
+  return ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(extension || "");
 };
 
-// Función para obtener nombre limpio del archivo
 const obtenerNombreLimpio = (url: string) => {
-  const nombreCompleto = url.split('/').pop() || 'archivo';
-  // Remover el timestamp del inicio si existe (formato: 1234567890_nombrearchivo.ext)
-  const sinTimestamp = nombreCompleto.replace(/^\d+_/, '');
+  const nombreCompleto = url.split("/").pop() || "archivo";
+  const sinTimestamp = nombreCompleto.replace(/^\d+_/, "");
   return sinTimestamp;
 };
 
@@ -58,20 +55,22 @@ export default function BandejaMensajes() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [mensajes, setMensajes] = useState<Message[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioChat[]>([]);
-  const [conversacionSeleccionada, setConversacionSeleccionada] = useState<number | null>(null);
+  const [conversacionSeleccionada, setConversacionSeleccionada] = useState<
+    number | null
+  >(null);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
   const [mostrarNuevaConv, setMostrarNuevaConv] = useState(false);
   const [nuevoDestinatario, setNuevoDestinatario] = useState("");
   const [usuariosBusqueda, setUsuariosBusqueda] = useState<UsuarioChat[]>([]);
   const [searchChat, setSearchChat] = useState("");
   const [archivoAdjunto, setArchivoAdjunto] = useState<File | null>(null);
-  const [toast, setToast] = useState<{ type: "success" | "error" | "warning"; text: string } | null>(null);
-
-  // Estados para infinite scroll
+  const [toast, setToast] = useState<{
+    type: "success" | "error" | "warning";
+    text: string;
+  } | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observerRef = useRef<HTMLDivElement | null>(null);
-
   const mensajeRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,7 +81,9 @@ export default function BandejaMensajes() {
 
   const fetchMensajes = async () => {
     try {
-      const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${user.id}`);
+      const res = await axios.get(
+        `https://proyectofinal-backend-1-uqej.onrender.com/messages/${user.id}`
+      );
       setMensajes(res.data);
     } catch (err) {
       console.error(err);
@@ -92,11 +93,13 @@ export default function BandejaMensajes() {
 
   const fetchUsuarios = async () => {
     try {
-      const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/messages/available/${user.id}`);
+      const res = await axios.get(
+        `https://proyectofinal-backend-1-uqej.onrender.com/messages/conversations/${user.id}`
+      );
       setUsuarios(res.data);
     } catch (err) {
       console.error(err);
-      showToast("❌ Error al cargar usuarios", "error");
+      showToast("❌ Error al cargar conversaciones", "error");
     }
   };
 
@@ -109,9 +112,9 @@ export default function BandejaMensajes() {
 
     try {
       const res = await axios.get(
-        `https://proyectofinal-backend-1-uqej.onrender.com/messages/available/${user.id}?search=${encodeURIComponent(
-          termino
-        )}&page=${pageNum}&limit=10`
+        `https://proyectofinal-backend-1-uqej.onrender.com/messages/available/${
+          user.id
+        }?search=${encodeURIComponent(termino)}&page=${pageNum}&limit=10`
       );
 
       if (pageNum === 1) {
@@ -174,7 +177,8 @@ export default function BandejaMensajes() {
   }, [conversacionSeleccionada, mensajes]);
 
   const enviarMensaje = async () => {
-    if (!conversacionSeleccionada || (!nuevoMensaje.trim() && !archivoAdjunto)) return;
+    if (!conversacionSeleccionada || (!nuevoMensaje.trim() && !archivoAdjunto))
+      return;
 
     const formData = new FormData();
     formData.append("sender_id", user.id.toString());
@@ -185,15 +189,21 @@ export default function BandejaMensajes() {
     }
 
     try {
-      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/messages/send", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post(
+        "https://proyectofinal-backend-1-uqej.onrender.com/messages/send",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       setNuevoMensaje("");
       setArchivoAdjunto(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      fetchMensajes();
+
+      // ✅ Actualizar mensajes y usuarios para que aparezca el nuevo chat
+      await Promise.all([fetchMensajes(), fetchUsuarios()]);
     } catch (error) {
       console.error("Error enviando mensaje:", error);
       showToast("❌ Error al enviar mensaje", "error");
@@ -204,11 +214,16 @@ export default function BandejaMensajes() {
     const ahora = new Date();
     const enviado = new Date(timestamp);
     if ((ahora.getTime() - enviado.getTime()) / 60000 > 10) {
-      showToast("⚠️ Solo se pueden eliminar mensajes de los últimos 10 minutos", "warning");
+      showToast(
+        "⚠️ Solo se pueden eliminar mensajes de los últimos 10 minutos",
+        "warning"
+      );
       return;
     }
     try {
-      await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`);
+      await axios.delete(
+        `https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`
+      );
       fetchMensajes();
       showToast("✅ Mensaje eliminado", "success");
     } catch (err) {
@@ -220,9 +235,11 @@ export default function BandejaMensajes() {
   const eliminarChat = async () => {
     if (!conversacionSeleccionada) return;
     if (!confirm("¿Seguro querés eliminar todo el chat?")) return;
-    
+
     try {
-      await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/messages/chat/${user.id}/${conversacionSeleccionada}`);
+      await axios.delete(
+        `https://proyectofinal-backend-1-uqej.onrender.com/messages/chat/${user.id}/${conversacionSeleccionada}`
+      );
       fetchMensajes();
       setConversacionSeleccionada(null);
       showToast("✅ Chat eliminado", "success");
@@ -235,7 +252,6 @@ export default function BandejaMensajes() {
   const manejarSeleccionArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      // Validar tamaño (10MB máximo)
       if (file.size > 10 * 1024 * 1024) {
         showToast("⚠️ El archivo no puede superar los 10MB", "warning");
         return;
@@ -259,26 +275,39 @@ export default function BandejaMensajes() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const conversacionesConMensajes: (UsuarioChat & { ultimoMensaje: string; timestamp: string })[] =
-    usuarios
-      .map((u) => {
-        const mensajesCon = mensajes.filter(
-          (m) => m.sender_id === u.id || m.receiver_id === u.id
-        );
-        if (mensajesCon.length === 0) return null;
+  // ✅ FIX: Incluir conversación seleccionada aunque no tenga mensajes aún
+  const conversacionesConMensajes: (UsuarioChat & {
+    ultimoMensaje: string;
+    timestamp: string;
+  })[] = usuarios
+    .map((u) => {
+      const mensajesCon = mensajes.filter(
+        (m) => m.sender_id === u.id || m.receiver_id === u.id
+      );
 
-        const ultimo = mensajesCon.sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        )[0];
+      // Si es la conversación seleccionada, mostrarla aunque no tenga mensajes
+      if (mensajesCon.length === 0 && u.id !== conversacionSeleccionada)
+        return null;
 
-        return {
-          ...u,
-          ultimoMensaje: ultimo?.content || "📎 Archivo adjunto",
-          timestamp: ultimo?.timestamp || "",
-        };
-      })
-      .filter((c): c is UsuarioChat & { ultimoMensaje: string; timestamp: string } => c !== null)
-      .filter((c) => c.nombre.toLowerCase().includes(searchChat.toLowerCase()));
+      const ultimo = mensajesCon.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )[0];
+
+      return {
+        ...u,
+        ultimoMensaje:
+          ultimo?.content || ultimo?.file_url
+            ? "📎 Archivo adjunto"
+            : "Sin mensajes aún",
+        timestamp: ultimo?.timestamp || "",
+      };
+    })
+    .filter(
+      (c): c is UsuarioChat & { ultimoMensaje: string; timestamp: string } =>
+        c !== null
+    )
+    .filter((c) => c.nombre.toLowerCase().includes(searchChat.toLowerCase()));
 
   const usuariosSinConversacion = usuarios.filter(
     (u) => !conversacionesConMensajes.find((c) => c.id === u.id)
@@ -294,20 +323,16 @@ export default function BandejaMensajes() {
   return (
     <>
       {toast && <Toast message={toast.text} type={toast.type} />}
-      
-      <motion.div
-        className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 50 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
+
+      <div className="w-full px-4 sm:px-6 bg-white rounded-lg shadow">
         <div className="min-h-screen bg-gray-100 py-4 px-2 sm:px-4">
           <div className="flex flex-col lg:flex-row gap-4 h-[85vh]">
             {/* Conversaciones */}
             <div className="w-full lg:w-1/3 bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col">
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-bold text-teal-800">Conversaciones</h2>
+                <h2 className="text-lg font-bold text-teal-800">
+                  Conversaciones
+                </h2>
                 <button
                   onClick={() => setMostrarNuevaConv(!mostrarNuevaConv)}
                   className="text-green-700 hover:underline text-sm"
@@ -417,12 +442,15 @@ export default function BandejaMensajes() {
                     {mensajes
                       .filter(
                         (msg) =>
-                          (msg.sender_id === conversacionSeleccionada && msg.receiver_id === user.id) ||
-                          (msg.sender_id === user.id && msg.receiver_id === conversacionSeleccionada)
+                          (msg.sender_id === conversacionSeleccionada &&
+                            msg.receiver_id === user.id) ||
+                          (msg.sender_id === user.id &&
+                            msg.receiver_id === conversacionSeleccionada)
                       )
                       .sort(
                         (a, b) =>
-                          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                          new Date(a.timestamp).getTime() -
+                          new Date(b.timestamp).getTime()
                       )
                       .map((msg) => (
                         <div
@@ -436,15 +464,18 @@ export default function BandejaMensajes() {
                           <strong className="text-sm">
                             {msg.sender_id === user.id ? "Yo" : msg.sender_name}
                           </strong>
-                          
-                          {/* Preview de archivos */}
+
                           {msg.file_url && (
                             <div className="mt-2 mb-1">
                               {esImagen(msg.file_url) ? (
-                                <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                  <img 
-                                    src={msg.file_url} 
-                                    alt="imagen adjunta" 
+                                <a
+                                  href={msg.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <img
+                                    src={msg.file_url}
+                                    alt="imagen adjunta"
                                     className="max-w-full max-h-60 rounded cursor-pointer hover:opacity-90 border"
                                   />
                                 </a>
@@ -463,16 +494,20 @@ export default function BandejaMensajes() {
                               )}
                             </div>
                           )}
-                          
-                          {msg.content && <div className="mt-1 text-sm">{msg.content}</div>}
-                          
+
+                          {msg.content && (
+                            <div className="mt-1 text-sm">{msg.content}</div>
+                          )}
+
                           <div className="text-xs text-gray-500 mt-1">
                             {new Date(msg.timestamp).toLocaleString()}
                           </div>
-                          
+
                           {msg.sender_id === user.id && (
                             <button
-                              onClick={() => eliminarMensaje(msg.id, msg.timestamp)}
+                              onClick={() =>
+                                eliminarMensaje(msg.id, msg.timestamp)
+                              }
                               className="absolute top-1 right-1 text-red-500 text-xs hover:underline"
                             >
                               Eliminar
@@ -549,7 +584,7 @@ export default function BandejaMensajes() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }
