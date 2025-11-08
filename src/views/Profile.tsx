@@ -1,17 +1,23 @@
+//#region IMPORTACIONES
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region COMPONENTE PRINCIPAL PROFILE
 function Profile() {
+  //#region HOOKS Y DATOS DEL USUARIO
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const navigate = useNavigate();
 
+  // Extracción de datos del usuario
   const userName = user.firstName;
   const lastName = user.lastName;
   const type = user.type;
   const dni = user.dni;
   const email = user.email;
+  //#endregion
 
-  const navigate = useNavigate();
-
+  //#region RENDER 
   return (
     <motion.div
       className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
@@ -21,32 +27,38 @@ function Profile() {
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <div className="min-h-screen bg-gray-100 py-4 sm:py-8">
-        {/* Título */}
+        {/* Título de la página */}
         <h1 className="text-xl sm:text-2xl font-bold text-teal-700 mb-4 text-center">
           Perfil del Usuario
         </h1>
 
+        {/* Contenedor del perfil */}
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
-          {/* Datos del perfil */}
+          {/* Sección de datos del perfil */}
           <div className="space-y-3 text-gray-800 text-sm mb-6">
+            {/* Campo de nombre */}
             <div className="bg-gray-50 px-4 py-2 rounded border border-gray-200">
               <strong className="text-teal-600 block">Nombre:</strong>{" "}
               {userName}
             </div>
 
+            {/* Campo de apellido */}
             <div className="bg-gray-50 px-4 py-2 rounded border border-gray-200">
               <strong className="text-teal-600 block">Apellido:</strong>{" "}
               {lastName}
             </div>
 
+            {/* Campo de DNI */}
             <div className="bg-gray-50 px-4 py-2 rounded border border-gray-200">
               <strong className="text-teal-600 block">DNI:</strong> {dni}
             </div>
 
+            {/* Campo de email */}
             <div className="bg-gray-50 px-4 py-2 rounded border border-gray-200">
               <strong className="text-teal-600 block">Email:</strong> {email}
             </div>
 
+            {/* Campo de tipo de usuario */}
             <div className="bg-gray-50 px-4 py-2 rounded border border-gray-200">
               <strong className="text-teal-600 block">Tipo de usuario:</strong>{" "}
               {type}
@@ -55,12 +67,15 @@ function Profile() {
 
           {/* Botones de acción */}
           <div className="flex flex-col sm:flex-row justify-between gap-2">
+            {/* Botón para volver al dashboard */}
             <button
               onClick={() => navigate("/dashboard")}
               className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded text-sm sm:text-base"
             >
               Volver
             </button>
+            
+            {/* Botón para editar el perfil */}
             <button
               onClick={() => navigate("/editar-usuario")}
               className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded text-sm sm:text-base"
@@ -72,6 +87,7 @@ function Profile() {
       </div>
     </motion.div>
   );
+  //#endregion
 }
-
 export default Profile;
+//#endregion

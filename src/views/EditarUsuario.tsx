@@ -1,10 +1,12 @@
+//#region IMPORTACIONES
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaEnvelope, FaLock, FaUserEdit, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -26,8 +28,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL EDITARUSUARIO
 export default function EditarUsuario() {
+  //#region ESTADOS Y HOOKS
   const [form, setForm] = useState({
     id: "",
     username: "",
@@ -39,12 +44,19 @@ export default function EditarUsuario() {
   const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; text: string } | null>(null);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  //#endregion
 
+  //#region TOAS
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
+  //#endregion
 
+  //#region EFFECTS Y LIFECYCLE
+  /**
+   * Carga los datos del usuario desde localStorage al montar el componente
+   */
   useEffect(() => {
     const userRaw = localStorage.getItem("user");
 
@@ -66,11 +78,19 @@ export default function EditarUsuario() {
       showToast("❌ Usuario no logueado", "error");
     }
   }, []);
+  //#endregion
 
+  //#region MANEJADORES DE FORMULARIO
+  /**
+   * Maneja los cambios en los campos del formulario
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Maneja el envío del formulario de edición
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -82,6 +102,9 @@ export default function EditarUsuario() {
     setShowModal(true);
   };
 
+  /**
+   * Confirma y ejecuta la actualización del usuario
+   */
   const confirmarActualizacion = async () => {
     setShowModal(false);
 
@@ -110,10 +133,12 @@ export default function EditarUsuario() {
       showToast(`❌ ${detail}`, "error");
     }
   };
+  //#endregion
 
+  //#region RENDER 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -125,12 +150,15 @@ export default function EditarUsuario() {
       >
         <div className="min-h-screen bg-gray-100 flex items-start justify-center py-8">
           <div className="bg-white shadow-lg rounded-xl p-4 sm:p-8 w-full max-w-md">
+            {/* Header del formulario */}
             <div className="flex items-center justify-center mb-6 text-teal-700">
               <FaUserEdit className="text-2xl sm:text-3xl mr-2" />
               <h2 className="text-xl sm:text-2xl font-bold">Editar mi usuario</h2>
             </div>
 
+            {/* Formulario de edición */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Campo de email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <FaEnvelope className="inline mr-1 text-teal-600" /> Email
@@ -145,6 +173,7 @@ export default function EditarUsuario() {
                 />
               </div>
 
+              {/* Campo de nueva contraseña */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <FaLock className="inline mr-1 text-teal-600" /> Nueva contraseña
@@ -159,6 +188,7 @@ export default function EditarUsuario() {
                 />
               </div>
 
+              {/* Campo de confirmación de contraseña */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <FaLock className="inline mr-1 text-teal-600" /> Confirmar contraseña
@@ -173,6 +203,7 @@ export default function EditarUsuario() {
                 />
               </div>
 
+              {/* Botones de acción */}
               <div className="flex flex-col sm:flex-row justify-between gap-2 mt-6">
                 <button
                   type="button"
@@ -192,7 +223,7 @@ export default function EditarUsuario() {
             </form>
           </div>
 
-          {/* Modal */}
+          {/* Modal de confirmación */}
           {showModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
@@ -221,4 +252,6 @@ export default function EditarUsuario() {
       </motion.div>
     </>
   );
+  //#endregion
 }
+//#endregion

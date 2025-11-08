@@ -1,8 +1,10 @@
+//#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import VistaPagos from "../views/VistaPagos";
 import { motion } from "framer-motion";
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -24,16 +26,26 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL MISPAGOS
 export default function MisPagos() {
+  //#region ESTADOS Y HOOKS
   const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  //#endregion
 
+  //#region TOAST
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
+  //#endregion
 
+  //#region EFFECTS Y LIFECYCLE
+  /**
+   * Valida los datos del usuario al montar el componente
+   */
   useEffect(() => {
     const userRaw = localStorage.getItem("user");
 
@@ -58,7 +70,10 @@ export default function MisPagos() {
       setLoading(false);
     }
   }, []);
+  //#endregion
 
+  //#region VALIDACIONES INICIALES
+  // Verificar si el usuario está logueado
   const userRaw = localStorage.getItem("user");
 
   if (!userRaw) {
@@ -79,6 +94,7 @@ export default function MisPagos() {
   try {
     const user = JSON.parse(userRaw);
     
+    // Verificar si los datos del usuario están completos
     if (!user.username) {
       return (
         <>
@@ -93,10 +109,15 @@ export default function MisPagos() {
         </>
       );
     }
+  //#endregion
 
+  //#region RENDER 
     return (
       <>
+        {/* Notificaciones Toast */}
         {toast && <Toast message={toast.text} type={toast.type} />}
+        
+        {/* Estado de carga */}
         {loading ? (
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">
@@ -105,11 +126,13 @@ export default function MisPagos() {
             </div>
           </div>
         ) : (
+          // Vista principal de pagos
           <VistaPagos username={user.username} type={user.type} />
         )}
       </>
     );
   } catch (err) {
+    // Manejo de errores en el parseo de datos
     return (
       <>
         {toast && <Toast message={toast.text} type={toast.type} />}
@@ -123,4 +146,6 @@ export default function MisPagos() {
       </>
     );
   }
+  //#endregion
 }
+//#endregion

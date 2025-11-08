@@ -1,7 +1,10 @@
+//#region IMPORTACIONES
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { FaPaperclip, FaTrash, FaTimes } from "react-icons/fa";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface Message {
   id: number;
   sender_id: number;
@@ -17,7 +20,9 @@ interface UsuarioChat {
   nombre: string;
   type: string;
 }
+//#endregion
 
+//#region COMPONENTE TOAST
 const Toast = ({
   message,
   type,
@@ -39,19 +44,30 @@ const Toast = ({
     </div>
   );
 };
+//#endregion
 
+//#region FUNCIONES UTILITARIAS
+/**
+ * Verifica si una URL corresponde a una imagen
+ */
 const esImagen = (url: string) => {
   const extension = url.split(".").pop()?.toLowerCase();
   return ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(extension || "");
 };
 
+/**
+ * Obtiene el nombre limpio del archivo removiendo timestamps
+ */
 const obtenerNombreLimpio = (url: string) => {
   const nombreCompleto = url.split("/").pop() || "archivo";
   const sinTimestamp = nombreCompleto.replace(/^\d+_/, "");
   return sinTimestamp;
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL BANDEJAMENSAJES
 export default function BandejaMensajes() {
+  //#region ESTADOS Y HOOKS
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [mensajes, setMensajes] = useState<Message[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioChat[]>([]);
@@ -73,12 +89,33 @@ export default function BandejaMensajes() {
   const observerRef = useRef<HTMLDivElement | null>(null);
   const mensajeRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  //#endregion
 
+  //#region FUNCIONES DE UTILIDAD
+  /**
+   * Muestra un mensaje toast de notificación
+   */
   const showToast = (text: string, type: "success" | "error" | "warning") => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
 
+  /**
+   * Formatea el tamaño de archivo en bytes a formato legible
+   */
+  const formatearTamano = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+  //#endregion
+
+  //#region FUNCIONES DE DATOS
+  /**
+   * Obtiene todos los mensajes del usuario
+   */
   const fetchMensajes = async () => {
     try {
       const res = await axios.get(
@@ -91,6 +128,9 @@ export default function BandejaMensajes() {
     }
   };
 
+  /**
+   * Obtiene la lista de conversaciones del usuario
+   */
   const fetchUsuarios = async () => {
     try {
       const res = await axios.get(
@@ -103,6 +143,9 @@ export default function BandejaMensajes() {
     }
   };
 
+  /**
+   * Busca usuarios según el término ingresado
+   */
   const buscarUsuarios = async (termino: string, pageNum = 1) => {
     if (!termino.trim()) {
       setUsuariosBusqueda([]);
@@ -130,52 +173,12 @@ export default function BandejaMensajes() {
       showToast("❌ Error al buscar usuarios", "error");
     }
   };
+  //#endregion
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      buscarUsuarios(nuevoDestinatario, 1);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [nuevoDestinatario]);
-
-  useEffect(() => {
-    if (!hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && nuevoDestinatario.trim()) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (observerRef.current) observer.observe(observerRef.current);
-
-    return () => {
-      if (observerRef.current) observer.unobserve(observerRef.current);
-    };
-  }, [hasMore, nuevoDestinatario]);
-
-  useEffect(() => {
-    if (page > 1) {
-      buscarUsuarios(nuevoDestinatario, page);
-    }
-  }, [page]);
-
-  useEffect(() => {
-    fetchMensajes();
-    fetchUsuarios();
-  }, [user.id]);
-
-  useEffect(() => {
-    if (mensajeRef.current) {
-      mensajeRef.current.scrollTop = mensajeRef.current.scrollHeight;
-    }
-  }, [conversacionSeleccionada, mensajes]);
-
+  //#region FUNCIONES DE MENSAJES
+  /**
+   * Envía un nuevo mensaje con soporte para archivos adjuntos
+   */
   const enviarMensaje = async () => {
     if (!conversacionSeleccionada || (!nuevoMensaje.trim() && !archivoAdjunto))
       return;
@@ -202,7 +205,7 @@ export default function BandejaMensajes() {
         fileInputRef.current.value = "";
       }
 
-      // ✅ Actualizar mensajes y usuarios para que aparezca el nuevo chat
+      // Actualizar mensajes y usuarios para que aparezca el nuevo chat
       await Promise.all([fetchMensajes(), fetchUsuarios()]);
     } catch (error) {
       console.error("Error enviando mensaje:", error);
@@ -210,6 +213,9 @@ export default function BandejaMensajes() {
     }
   };
 
+  /**
+   * Elimina un mensaje individual (solo en los primeros 10 minutos)
+   */
   const eliminarMensaje = async (id: number, timestamp: string) => {
     const ahora = new Date();
     const enviado = new Date(timestamp);
@@ -232,6 +238,9 @@ export default function BandejaMensajes() {
     }
   };
 
+  /**
+   * Elimina toda la conversación con un usuario
+   */
   const eliminarChat = async () => {
     if (!conversacionSeleccionada) return;
     if (!confirm("¿Seguro querés eliminar todo el chat?")) return;
@@ -248,7 +257,12 @@ export default function BandejaMensajes() {
       showToast("❌ Error al eliminar chat", "error");
     }
   };
+  //#endregion
 
+  //#region FUNCIONES DE ARCHIVOS
+  /**
+   * Maneja la selección de archivos adjuntos
+   */
   const manejarSeleccionArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
@@ -260,22 +274,74 @@ export default function BandejaMensajes() {
     }
   };
 
+  /**
+   * Remueve el archivo adjunto seleccionado
+   */
   const removerArchivo = () => {
     setArchivoAdjunto(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
+  //#endregion
 
-  const formatearTamano = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+  //#region EFFECTS Y LIFECYCLE
+  // Effect para búsqueda de usuarios con debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      buscarUsuarios(nuevoDestinatario, 1);
+    }, 300);
 
-  // ✅ FIX: Incluir conversación seleccionada aunque no tenga mensajes aún
+    return () => clearTimeout(timer);
+  }, [nuevoDestinatario]);
+
+  // Effect para infinite scroll
+  useEffect(() => {
+    if (!hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && nuevoDestinatario.trim()) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) observer.observe(observerRef.current);
+
+    return () => {
+      if (observerRef.current) observer.unobserve(observerRef.current);
+    };
+  }, [hasMore, nuevoDestinatario]);
+
+  // Effect para cargar más resultados de búsqueda
+  useEffect(() => {
+    if (page > 1) {
+      buscarUsuarios(nuevoDestinatario, page);
+    }
+  }, [page]);
+
+  // Effect para cargar datos iniciales
+  useEffect(() => {
+    fetchMensajes();
+    fetchUsuarios();
+  }, [user.id]);
+
+  // Effect para auto-scroll al fondo de los mensajes
+  useEffect(() => {
+    if (mensajeRef.current) {
+      mensajeRef.current.scrollTop = mensajeRef.current.scrollHeight;
+    }
+  }, [conversacionSeleccionada, mensajes]);
+  //#endregion
+
+  //#region VARIABLES DERIVADAS
+  /**
+   * Lista de conversaciones con mensajes recientes
+   * Incluye conversación seleccionada aunque no tenga mensajes aún
+   */
   const conversacionesConMensajes: (UsuarioChat & {
     ultimoMensaje: string;
     timestamp: string;
@@ -309,25 +375,34 @@ export default function BandejaMensajes() {
     )
     .filter((c) => c.nombre.toLowerCase().includes(searchChat.toLowerCase()));
 
+  /**
+   * Usuarios con los que no hay conversación iniciada
+   */
   const usuariosSinConversacion = usuarios.filter(
     (u) => !conversacionesConMensajes.find((c) => c.id === u.id)
   );
 
+  /**
+   * Inicia una nueva conversación con un usuario
+   */
   const iniciarConversacion = (id: number) => {
     setConversacionSeleccionada(id);
     setMostrarNuevaConv(false);
     setNuevoDestinatario("");
     setUsuariosBusqueda([]);
   };
+  //#endregion
 
+  //#region RENDER 
   return (
     <>
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
 
       <div className="w-full px-4 sm:px-6 bg-white rounded-lg shadow">
         <div className="min-h-screen bg-gray-100 py-4 px-2 sm:px-4">
           <div className="flex flex-col lg:flex-row gap-4 h-[85vh]">
-            {/* Conversaciones */}
+            {/* Panel de conversaciones */}
             <div className="w-full lg:w-1/3 bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg font-bold text-teal-800">
@@ -341,6 +416,7 @@ export default function BandejaMensajes() {
                 </button>
               </div>
 
+              {/* Búsqueda de chats existentes */}
               <input
                 type="text"
                 placeholder="Buscar chat..."
@@ -349,6 +425,7 @@ export default function BandejaMensajes() {
                 className="mb-3 px-2 py-2 border rounded w-full text-sm"
               />
 
+              {/* Formulario para nueva conversación */}
               {mostrarNuevaConv && (
                 <div className="mb-3 flex flex-col gap-2">
                   <input
@@ -395,6 +472,7 @@ export default function BandejaMensajes() {
                 </div>
               )}
 
+              {/* Lista de conversaciones */}
               <div className="overflow-y-auto flex-grow">
                 {conversacionesConMensajes.map((conv) => (
                   <div
@@ -420,10 +498,11 @@ export default function BandejaMensajes() {
               </div>
             </div>
 
-            {/* Mensajes */}
+            {/* Panel de mensajes */}
             <div className="w-full lg:flex-1 bg-white shadow-md rounded-lg p-3 sm:p-4 flex flex-col">
               {conversacionSeleccionada ? (
                 <>
+                  {/* Header del chat */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                     <h3 className="font-bold text-teal-800 text-lg">Chat</h3>
                     <button
@@ -434,6 +513,7 @@ export default function BandejaMensajes() {
                     </button>
                   </div>
 
+                  {/* Área de mensajes */}
                   <div
                     ref={mensajeRef}
                     className="flex-grow overflow-y-auto mb-3 p-2 border rounded"
@@ -465,6 +545,7 @@ export default function BandejaMensajes() {
                             {msg.sender_id === user.id ? "Yo" : msg.sender_name}
                           </strong>
 
+                          {/* Preview de archivos adjuntos */}
                           {msg.file_url && (
                             <div className="mt-2 mb-1">
                               {esImagen(msg.file_url) ? (
@@ -495,14 +576,17 @@ export default function BandejaMensajes() {
                             </div>
                           )}
 
+                          {/* Contenido del mensaje */}
                           {msg.content && (
                             <div className="mt-1 text-sm">{msg.content}</div>
                           )}
 
+                          {/* Timestamp del mensaje */}
                           <div className="text-xs text-gray-500 mt-1">
                             {new Date(msg.timestamp).toLocaleString()}
                           </div>
 
+                          {/* Botón de eliminar (solo para mensajes propios) */}
                           {msg.sender_id === user.id && (
                             <button
                               onClick={() =>
@@ -517,6 +601,7 @@ export default function BandejaMensajes() {
                       ))}
                   </div>
 
+                  {/* Indicador de archivo adjunto */}
                   {archivoAdjunto && (
                     <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-center justify-between">
@@ -542,6 +627,7 @@ export default function BandejaMensajes() {
                     </div>
                   )}
 
+                  {/* Formulario de envío de mensajes */}
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
@@ -587,4 +673,6 @@ export default function BandejaMensajes() {
       </div>
     </>
   );
+  //#endregion
 }
+//#endregion

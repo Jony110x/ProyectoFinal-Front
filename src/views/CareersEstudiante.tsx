@@ -1,8 +1,11 @@
+//#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region TIPOS E INTERFACES
 type MateriaType = {
   id: number;
   name: string;
@@ -16,8 +19,10 @@ type MateriaType = {
 type MateriaConNota = MateriaType & {
   nota: number | null;
 };
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
+
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" }) => {
   return (
     <motion.div
@@ -37,19 +42,29 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL CAREERESTUDIANTE
 function CareerEstudiante() {
+  //#region ESTADOS Y HOOKS
   const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
   const navigate = useNavigate();
   const [materias, setMaterias] = useState<MateriaConNota[]>([]);
   const [toast, setToast] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  //#endregion
 
+  //#region TOAS
   const showToast = (text: string, type: "success" | "error" | "info") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
+  //#endregion
 
+  //#region EFFECTS Y LIFECYCLE
   useEffect(() => {
+    /**
+     * Obtiene las materias del estudiante con sus respectivas notas
+     */
     const fetchMaterias = async () => {
       try {
         const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/users/${userId}/profesor`);
@@ -87,10 +102,12 @@ function CareerEstudiante() {
       showToast("❌ No se encontró información del usuario", "error");
     }
   }, [userId]);
+  //#endregion
 
+  //#region RENDER 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -101,6 +118,7 @@ function CareerEstudiante() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
+          {/* Header y Controles */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-teal-700">Materias inscriptas</h2>
             <button
@@ -111,6 +129,7 @@ function CareerEstudiante() {
             </button>
           </div>
 
+          {/* Mensaje de lista vacía */}
           {materias.length === 0 ? (
             <p className="text-gray-600 text-center py-8">No estás inscripto en ninguna materia.</p>
           ) : (
@@ -187,6 +206,8 @@ function CareerEstudiante() {
       </motion.div>
     </>
   );
+  //#endregion
 }
 
 export default CareerEstudiante;
+//#endregion

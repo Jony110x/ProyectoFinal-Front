@@ -1,15 +1,19 @@
+//#region IMPORTACIONES
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface User {
   id?: number;
   username?: string;
   type?: "admin" | "estudiante" | "profesor";
 }
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST PARA NOTIFICACIONES
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "warning" }) => {
   return (
     <motion.div
@@ -31,8 +35,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL REGISTROUSUARIO
 const RegistroUsuario: React.FC = () => {
+  //#region ESTADOS Y HOOKS
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -49,12 +56,19 @@ const RegistroUsuario: React.FC = () => {
   const [toast, setToast] = useState<{ type: "success" | "error" | "warning"; text: string } | null>(null);
 
   const navigate = useNavigate();
+  //#endregion
 
+  //#region TOAST
   const showToast = (text: string, type: "success" | "error" | "warning") => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 1000); // 1 segundo
   };
+  //#endregion
 
+  //#region EFFECTS Y LIFECYCLE
+  /**
+   * Carga los datos del usuario y token al montar el componente
+   */
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -74,16 +88,27 @@ const RegistroUsuario: React.FC = () => {
     setLoading(false);
   }, []);
 
+  /**
+   * Verifica permisos de administrador cuando se cargan los datos del usuario
+   */
   useEffect(() => {
     if (!loading && (!user || user.type !== "admin")) {
        showToast("❌ No tienes permisos para acceder a esta sección", "error");
     }
   }, [user, loading]);
+  //#endregion
 
+  //#region FUNCIONES 
+  /**
+   * Maneja los cambios en los campos del formulario
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Maneja el envío del formulario de registro de usuario
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,14 +128,16 @@ const RegistroUsuario: React.FC = () => {
       if (res.data.detail === "Usuario agregado correctamente") {
          showToast("✅ Usuario registrado exitosamente", "success");
 
+        // Redirigir a la lista de usuarios después del registro exitoso
         setTimeout(() => {
           navigate("/usuarios");
         }, 1500);
 
       } else {
-         showToast("❌ Erro desconocido al registrar", "error");
+         showToast("❌ Error desconocido al registrar", "error");
       }
     } catch (error: any) {
+      // Manejo específico de errores de la API
       const detail = error?.response?.data?.detail;
       if (detail?.includes("usuario")) {
         showToast("⚠️ El nombre de usuario ya está en uso", "warning");
@@ -119,11 +146,15 @@ const RegistroUsuario: React.FC = () => {
       } else if (detail?.includes("DNI")) {
         showToast("⚠️ El DNI ya existe", "warning");
       } else {
-        showToast("❌ Erro al registrar el usuario", "error");
+        showToast("❌ Error al registrar el usuario", "error");
       }
     }
   };
+  //#endregion
 
+  //#region RENDER 
+  
+  // Estado de carga
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,6 +163,7 @@ const RegistroUsuario: React.FC = () => {
     );
   }
 
+  // Verificación de permisos de administrador
   if (!user || user.type !== "admin") {
     return (
       <motion.div
@@ -140,7 +172,6 @@ const RegistroUsuario: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       > 
-      
         <div className="p-6 text-center">
           <h3 className="text-lg sm:text-xl font-semibold text-red-600 mb-4">Acceso Denegado</h3>
           <p className="text-gray-600">Solo los administradores pueden acceder a esta sección.</p>
@@ -155,6 +186,7 @@ const RegistroUsuario: React.FC = () => {
     );
   }
 
+  // Configuración de campos del formulario
   const formFields = [
     { name: "username", label: "Usuario:", type: "text" },
     { name: "password", label: "Contraseña:", type: "password" },
@@ -166,89 +198,96 @@ const RegistroUsuario: React.FC = () => {
 
   return (
     <>
-    {toast && <Toast message={toast.text} type={toast.type} />}
-    <motion.div
-      className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-white flex justify-center items-start py-8">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-4xl mx-auto"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold text-center text-teal-700 mb-6">
-            Registrar Usuario
-          </h2>
+      {/* Notificación Toast */}
+      {toast && <Toast message={toast.text} type={toast.type} />}
+      
+      <motion.div
+        className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="min-h-screen bg-gradient-to-br from-teal-50 to-white flex justify-center items-start py-8">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-4xl mx-auto"
+          >
+            <h2 className="text-xl sm:text-2xl font-bold text-center text-teal-700 mb-6">
+              Registrar Usuario
+            </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {formFields.map((field) => (
-              <div key={field.name} className="flex flex-col">
+            {/* Grid de campos del formulario */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {formFields.map((field) => (
+                <div key={field.name} className="flex flex-col">
+                  <label 
+                    htmlFor={field.name} 
+                    className="text-sm font-medium text-gray-700 mb-2"
+                  >
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type}
+                    id={field.name}
+                    name={field.name}
+                    value={formData[field.name as keyof typeof formData]}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 sm:py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none transition-colors text-sm sm:text-base"
+                    placeholder={`Ingrese ${field.label.toLowerCase()}`}
+                  />
+                </div>
+              ))}
+
+              {/* Selector de tipo de usuario */}
+              <div className="flex flex-col lg:col-span-2">
                 <label 
-                  htmlFor={field.name} 
+                  htmlFor="type" 
                   className="text-sm font-medium text-gray-700 mb-2"
                 >
-                  {field.label}
+                  Tipo de usuario:
                 </label>
-                <input
-                  type={field.type}
-                  id={field.name}
-                  name={field.name}
-                  value={formData[field.name as keyof typeof formData]}
+                <select
+                  id="type"
+                  name="type"
+                  value={formData.type}
                   onChange={handleChange}
-                  required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 sm:py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none transition-colors text-sm sm:text-base"
-                  placeholder={`Ingrese ${field.label.toLowerCase()}`}
-                />
+                >
+                  <option value="estudiante">Estudiante</option>
+                  <option value="profesor">Profesor</option>
+                </select>
               </div>
-            ))}
-
-            <div className="flex flex-col lg:col-span-2">
-              <label 
-                htmlFor="type" 
-                className="text-sm font-medium text-gray-700 mb-2"
-              >
-                Tipo de usuario:
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 sm:py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none transition-colors text-sm sm:text-base"
-              >
-                <option value="estudiante">Estudiante</option>
-                <option value="profesor">Profesor</option>
-              </select>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-            <button
-              type="submit"
-              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white py-2 sm:py-3 px-6 rounded-md shadow-md transition-colors font-medium text-sm sm:text-base"
-            >
-              Registrar Usuario
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/usuarios")}
-              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white py-2 sm:py-3 px-6 rounded-md shadow-md transition-colors font-medium text-sm sm:text-base"
-            >
-              Cancelar
-            </button>
-          </div>
+            {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 mt-6 sm:mt-8">
+              <button
+                type="submit"
+                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white py-2 sm:py-3 px-6 rounded-md shadow-md transition-colors font-medium text-sm sm:text-base"
+              >
+                Registrar Usuario
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/usuarios")}
+                className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white py-2 sm:py-3 px-6 rounded-md shadow-md transition-colors font-medium text-sm sm:text-base"
+              >
+                Cancelar
+              </button>
+            </div>
 
-          {/* Información adicional para móvil */}
-          <div className="mt-4 sm:hidden text-xs text-gray-500 text-center">
-            <p>Completá todos los campos para registrar un nuevo usuario</p>
-          </div>
-        </form>
-      </div>
-    </motion.div>
+            {/* Información adicional para móvil */}
+            <div className="mt-4 sm:hidden text-xs text-gray-500 text-center">
+              <p>Completá todos los campos para registrar un nuevo usuario</p>
+            </div>
+          </form>
+        </div>
+      </motion.div>
     </>
   );
+  //#endregion
 };
 
 export default RegistroUsuario;
+//#endregion

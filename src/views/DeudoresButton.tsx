@@ -1,12 +1,23 @@
+//#region IMPORTACIONES
 import { useNavigate } from "react-router-dom";
+//#endregion
 
+//#region COMPONENTE PRINCIPAL DEUDORESBUTTON
 export default function DeudoresButton() {
+  //#region HOOKS Y ESTADOS
   const navigate = useNavigate();
+  //#endregion
 
+  //#region MANEJADORES DE EVENTOS
+  /**
+   * Maneja la navegación a la vista de deudores
+   */
   const handleClick = () => {
     navigate("/deudores");
   };
+  //#endregion
 
+  //#region RENDER 
   return (
     <button
       onClick={handleClick}
@@ -18,4 +29,6 @@ export default function DeudoresButton() {
       Ver Deudores
     </button>
   );
+  //#endregion
 }
+//#endregion

@@ -1,8 +1,11 @@
+//#region IMPORTACIONES
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface Carer {
   id: number;
   name: string;
@@ -15,8 +18,9 @@ interface User {
   lastName: string;
   type: string;
 }
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -38,8 +42,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL CREATEPAYMENTFORM
 export default function CreatePaymentForm() {
+  //#region ESTADOS Y HOOKS
   const [carers, setCarers] = useState<Carer[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [form, setForm] = useState({
@@ -53,33 +60,19 @@ export default function CreatePaymentForm() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  //#endregion
 
+  //#region TOAS
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
+  //#endregion
 
-  // Cargar carreras al inicio
-  useEffect(() => {
-    axios.get("https://proyectofinal-backend-1-uqej.onrender.com/carer/all")
-      .then((res) => {
-        setCarers(res.data);
-      })
-      .catch((err) => {
-        console.error("Error al cargar carreras:", err);
-        showToast("❌ Error al cargar carreras", "error");
-      });
-  }, []);
-
-  // Buscar alumnos dinámicamente
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (searchTerm) searchStudents(searchTerm);
-    }, 300); // debounce de 300ms
-
-    return () => clearTimeout(timeout);
-  }, [searchTerm]);
-
+  //#region FUNCIONES DE DATOS
+  /**
+   * Busca estudiantes según el término ingresado
+   */
   const searchStudents = async (term: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -95,22 +88,29 @@ export default function CreatePaymentForm() {
       console.log(res.data);
       setStudents(res.data.users || res.data);
       
-      
     } catch (error) {
       console.error("Error buscando estudiantes:", error);
       showToast("❌ Error al buscar estudiantes", "error");
     }
   };
+  //#endregion
 
+  //#region MANEJADORES DE FORMULARIO
+  /**
+   * Maneja los cambios en los campos del formulario
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Maneja el envío del formulario de creación de pago
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validaciones
+    // Validaciones del formulario
     if (!form.user_id) {
       showToast("⚠️ Selecciona un estudiante", "warning");
       setLoading(false);
@@ -157,27 +157,61 @@ export default function CreatePaymentForm() {
     }
   };
 
-  const handleCancel = () => {
-    setTimeout(() => {
-      navigate("/vistaPagos");
-    }, 300);
-  };
-
+  /**
+   * Maneja la selección de un estudiante del listado
+   */
   const handleStudentSelect = (student: User) => {
     setForm({ ...form, user_id: student.id.toString() });
     setSearchTerm(`${student.firstName} ${student.lastName}`);
     setStudents([]);
   };
 
+  /**
+   * Limpia la búsqueda de estudiantes
+   */
   const clearStudentSearch = () => {
     setSearchTerm("");
     setStudents([]);
     setForm({ ...form, user_id: "" });
   };
 
+  /**
+   * Maneja la cancelación y navegación de vuelta
+   */
+  const handleCancel = () => {
+    setTimeout(() => {
+      navigate("/vistaPagos");
+    }, 300);
+  };
+  //#endregion
+
+  //#region EFFECTS Y LIFECYCLE
+  // Effect para cargar carreras al inicio
+  useEffect(() => {
+    axios.get("https://proyectofinal-backend-1-uqej.onrender.com/carer/all")
+      .then((res) => {
+        setCarers(res.data);
+      })
+      .catch((err) => {
+        console.error("Error al cargar carreras:", err);
+        showToast("❌ Error al cargar carreras", "error");
+      });
+  }, []);
+
+  // Effect para búsqueda de estudiantes con debounce
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (searchTerm) searchStudents(searchTerm);
+    }, 300); // debounce de 300ms
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+  //#endregion
+
+  //#region RENDER 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -188,10 +222,11 @@ export default function CreatePaymentForm() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="max-w-md mx-auto mt-10 bg-white shadow-md p-6 rounded-lg">
+          {/* Header del formulario */}
           <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">Crear Nuevo Pago</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Buscador de estudiantes */}
+            {/* Campo de búsqueda de estudiantes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Estudiante:</label>
               <div className="relative">
@@ -212,6 +247,7 @@ export default function CreatePaymentForm() {
                   </button>
                 )}
               </div>
+              {/* Lista de resultados de búsqueda */}
               {students.length > 0 && (
                 <ul className="border mt-1 max-h-40 overflow-y-auto rounded-md">
                   {students.map((s) => (
@@ -246,7 +282,7 @@ export default function CreatePaymentForm() {
               </select>
             </div>
 
-            {/* Monto */}
+            {/* Campo de monto */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Monto:</label>
               <input
@@ -260,7 +296,7 @@ export default function CreatePaymentForm() {
               />
             </div>
 
-            {/* Mes afectado */}
+            {/* Campo de mes afectado */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mes afectado:</label>
               <input
@@ -273,7 +309,7 @@ export default function CreatePaymentForm() {
               />
             </div>
 
-            {/* Botones */}
+            {/* Botones de acción */}
             <div className="flex justify-between mt-6">
               <button
                 type="submit"
@@ -297,4 +333,6 @@ export default function CreatePaymentForm() {
       </motion.div>
     </>
   );
+  //#endregion
 }
+//#endregion

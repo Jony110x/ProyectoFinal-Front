@@ -1,9 +1,12 @@
+//#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface Usuario {
   id: number;
   username: string;
@@ -20,8 +23,9 @@ interface PaginationState {
   users: Usuario[];
   loading: boolean;
 }
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -43,8 +47,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL LISTAUSUARIOS
 export default function ListaUsuarios() {
+  //#region ESTADOS Y HOOKS
   const [profesores, setProfesores] = useState<PaginationState>({
     page: 0,
     total: 0,
@@ -65,12 +72,38 @@ export default function ListaUsuarios() {
 
   const limit = 20;
   const navigate = useNavigate();
+  //#endregion
 
+  //#region FUNCIONES DE UTILIDAD
+  /**
+   * Muestra un mensaje toast de notificación
+   */
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
 
+  /**
+   * Limpia el término de búsqueda
+   */
+  const handleClearSearch = () => {
+    setSearchTerm("");
+  };
+
+  /**
+   * Navega a la página de registro de usuarios
+   */
+  const handleNavigateToRegister = () => {
+    setTimeout(() => {
+      navigate("/registro");
+    }, 300);
+  };
+  //#endregion
+
+  //#region FUNCIONES DE DATOS
+  /**
+   * Obtiene la lista de usuarios paginada por tipo
+   */
   const fetchUsuarios = async (tipo: "profesor" | "estudiante", pagina: number) => {
     try {
       const token = localStorage.getItem("token");
@@ -100,7 +133,6 @@ export default function ListaUsuarios() {
         }));
       }
       
-      
     } catch (error) {
       console.error(`Error al traer ${tipo}s:`, error);
       showToast(`❌ Error al cargar ${tipo === 'profesor' ? 'profesores' : 'estudiantes'}`, "error");
@@ -112,6 +144,9 @@ export default function ListaUsuarios() {
     }
   };
 
+  /**
+   * Busca usuarios filtrados por término de búsqueda
+   */
   const fetchUsuariosFiltrados = async (tipo: "profesor" | "estudiante", filtro: string, pagina: number) => {
     try {
       const token = localStorage.getItem("token");
@@ -141,7 +176,6 @@ export default function ListaUsuarios() {
         }));
       }
       
-      
     } catch (error) {
       console.error(`Error al buscar ${tipo}s:`, error);
       showToast(`❌ Error al buscar ${tipo === 'profesor' ? 'profesores' : 'estudiantes'}`, "error");
@@ -153,22 +187,9 @@ export default function ListaUsuarios() {
     }
   };
 
-  useEffect(() => {
-    if (searchTerm.trim().length === 0) {
-      fetchUsuarios("profesor", profesores.page);
-    } else {
-      fetchUsuariosFiltrados("profesor", searchTerm, profesores.page);
-    }
-  }, [profesores.page, searchTerm]);
-
-  useEffect(() => {
-    if (searchTerm.trim().length === 0) {
-      fetchUsuarios("estudiante", estudiantes.page);
-    } else {
-      fetchUsuariosFiltrados("estudiante", searchTerm, estudiantes.page);
-    }
-  }, [estudiantes.page, searchTerm]);
-
+  /**
+   * Restablece la contraseña de un usuario a "1234"
+   */
   const handleResetPassword = async (userId: number, userName: string) => {
     setResettingPassword(userId);
 
@@ -189,20 +210,32 @@ export default function ListaUsuarios() {
       setResettingPassword(null);
     }
   };
+  //#endregion
 
-  const handleClearSearch = () => {
-    setSearchTerm("");
-  };
+  //#region EFFECTS Y LIFECYCLE
+  // Effect para cargar profesores
+  useEffect(() => {
+    if (searchTerm.trim().length === 0) {
+      fetchUsuarios("profesor", profesores.page);
+    } else {
+      fetchUsuariosFiltrados("profesor", searchTerm, profesores.page);
+    }
+  }, [profesores.page, searchTerm]);
 
-  const handleNavigateToRegister = () => {
-    setTimeout(() => {
-      navigate("/registro");
-    }, 300);
-  };
+  // Effect para cargar estudiantes
+  useEffect(() => {
+    if (searchTerm.trim().length === 0) {
+      fetchUsuarios("estudiante", estudiantes.page);
+    } else {
+      fetchUsuariosFiltrados("estudiante", searchTerm, estudiantes.page);
+    }
+  }, [estudiantes.page, searchTerm]);
+  //#endregion
 
-  const profesoresFiltrados = profesores.users;
-  const estudiantesFiltrados = estudiantes.users;
-
+  //#region COMPONENTES INTERNOS
+  /**
+   * Componente para controles de paginación
+   */
   const PaginationControls = ({ 
     tipo, 
     state, 
@@ -246,6 +279,9 @@ export default function ListaUsuarios() {
     </div>
   );
 
+  /**
+   * Componente para mostrar tabla de usuarios
+   */
   const UserTable = ({ usuarios, titulo }: { usuarios: Usuario[]; titulo: string }) => (
     <div className="mb-8">
       <h3 className="text-xl font-semibold text-teal-700 mb-4">{titulo}</h3>
@@ -393,7 +429,9 @@ export default function ListaUsuarios() {
       )}
     </div>
   );
+  //#endregion
 
+  //#region RENDER 
   if (profesores.loading && estudiantes.loading) {
     return (
       <p className="text-center text-lg text-gray-600 mt-10">
@@ -404,7 +442,7 @@ export default function ListaUsuarios() {
 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -415,6 +453,7 @@ export default function ListaUsuarios() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="py-6">
+          {/* Header y Controles */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-teal-800">Panel de Usuarios</h2>
             <button
@@ -425,6 +464,7 @@ export default function ListaUsuarios() {
             </button>
           </div>
 
+          {/* Barra de Búsqueda */}
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
               <input
@@ -449,6 +489,7 @@ export default function ListaUsuarios() {
             </div>
           </div>
 
+          {/* Resultados de Búsqueda */}
           {searchTerm && (
             <p className="text-center text-gray-600 mb-4">
               Mostrando resultados para: "{searchTerm}" 
@@ -457,7 +498,7 @@ export default function ListaUsuarios() {
           )}
 
           {/* Sección Profesores */}
-          <UserTable usuarios={profesoresFiltrados} titulo="Profesores" />
+          <UserTable usuarios={profesores.users} titulo="Profesores" />
           <PaginationControls 
             tipo="Profesores" 
             state={profesores} 
@@ -465,7 +506,7 @@ export default function ListaUsuarios() {
           />
 
           {/* Sección Estudiantes */}
-          <UserTable usuarios={estudiantesFiltrados} titulo="Estudiantes" />
+          <UserTable usuarios={estudiantes.users} titulo="Estudiantes" />
           <PaginationControls 
             tipo="Estudiantes" 
             state={estudiantes} 
@@ -475,4 +516,6 @@ export default function ListaUsuarios() {
       </motion.div>
     </>
   );
+  //#endregion
 }
+//#endregion

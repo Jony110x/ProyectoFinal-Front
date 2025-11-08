@@ -1,3 +1,4 @@
+//#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -9,8 +10,9 @@ import {
   FaUserPlus,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -32,8 +34,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL DASHBOARD
 function Dashboard() {
+  //#region ESTADOS Y HOOKS
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const { firstName, lastName, type, username, id } = user;
@@ -44,63 +49,86 @@ function Dashboard() {
   const [carrerasRecientes, setCarrerasRecientes] = useState([]);
   const [noPagaron, setNoPagaron] = useState([]);
   const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; text: string } | null>(null);
+  //#endregion
 
+  //#region FUNCIONES DE UTILIDAD
+  /**
+   * Muestra un mensaje toast de notificación
+   */
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
 
-  useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        const [pagosRes, mensajesRes] = await Promise.all([
-          axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/payment/user/${username}`),
-          axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`),
-        ]);
-
-        setPagosRecientes(pagosRes.data.slice(0, 2));
-        setMensajesRecientes(mensajesRes.data.slice(0, 2));
-        
-      } catch (error) {
-        console.error("Error cargando datos básicos:", error);
-        showToast("❌ Error al cargar datos del dashboard", "error");
-      }
-    };
-
-    const cargarAdminData = async () => {
-      try {
-        const [usuarios, carreras, sinPagos] = await Promise.all([
-          axios.get("https://proyectofinal-backend-1-uqej.onrender.com/users/alls"),
-          axios.get("https://proyectofinal-backend-1-uqej.onrender.com/carer/all"),
-          axios.get("https://proyectofinal-backend-1-uqej.onrender.com/payment/pending"),
-        ]);
-
-        setUsuariosRecientes(usuarios.data.slice(-3));
-        setCarrerasRecientes(carreras.data.slice(-3));
-        setNoPagaron(sinPagos.data);
-        
-      } catch (error) {
-        console.error("Error cargando datos admin:", error);
-        showToast("❌ Error al cargar datos de administración", "error");
-      }
-    };
-
-    cargarDatos();
-    if (type === "admin") {
-      cargarAdminData();
-    }
-  }, [username, id, type]);
-
+  /**
+   * Maneja la navegación a diferentes secciones
+   */
   const handleNavigation = (path: string, section: string) => {
     console.log("redirigue ---> ", section)
     setTimeout(() => {
       navigate(path);
     }, 300);
   };
+  //#endregion
 
+  //#region FUNCIONES DE DATOS
+  /**
+   * Carga los datos básicos del dashboard según el tipo de usuario
+   */
+  const cargarDatos = async () => {
+    try {
+      const [pagosRes, mensajesRes] = await Promise.all([
+        axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/payment/user/${username}`),
+        axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`),
+      ]);
+
+      setPagosRecientes(pagosRes.data.slice(0, 2));
+      setMensajesRecientes(mensajesRes.data.slice(0, 2));
+      
+    } catch (error) {
+      console.error("Error cargando datos básicos:", error);
+      showToast("❌ Error al cargar datos del dashboard", "error");
+    }
+  };
+
+  /**
+   * Carga datos específicos para usuarios administradores
+   */
+  const cargarAdminData = async () => {
+    try {
+      const [usuarios, carreras, sinPagos] = await Promise.all([
+        axios.get("https://proyectofinal-backend-1-uqej.onrender.com/users/alls"),
+        axios.get("https://proyectofinal-backend-1-uqej.onrender.com/carer/all"),
+        axios.get("https://proyectofinal-backend-1-uqej.onrender.com/payment/pending"),
+      ]);
+
+      setUsuariosRecientes(usuarios.data.slice(-3));
+      setCarrerasRecientes(carreras.data.slice(-3));
+      setNoPagaron(sinPagos.data);
+      
+    } catch (error) {
+      console.error("Error cargando datos admin:", error);
+      showToast("❌ Error al cargar datos de administración", "error");
+    }
+  };
+  //#endregion
+
+  //#region EFFECTS Y LIFECYCLE
+  /**
+   * Carga los datos del dashboard al montar el componente
+   */
+  useEffect(() => {
+    cargarDatos();
+    if (type === "admin") {
+      cargarAdminData();
+    }
+  }, [username, id, type]);
+  //#endregion
+
+  //#region RENDER 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -111,7 +139,7 @@ function Dashboard() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="w-full px-4 sm:px-6 py-4 sm:py-8">
-          {/* Bienvenida */}
+          {/* Sección de bienvenida */}
           <div className="text-center mb-6 sm:mb-10">
             <img
               src={logo}
@@ -124,12 +152,13 @@ function Dashboard() {
             <p className="text-lg sm:text-xl text-gray-600 mt-2 capitalize">Rol: {type}</p>
           </div>
 
-          {/* Accesos rápidos */}
+          {/* Panel de accesos rápidos */}
           <div className="w-full flex justify-center">
             <div
               className="flex flex-wrap justify-center gap-4 sm:gap-6"
               style={{ maxWidth: "1000px" }}
             >
+              {/* Tarjetas para estudiantes */}
               {type === "estudiante" && (
                 <>
                   <div
@@ -189,6 +218,7 @@ function Dashboard() {
                 </>
               )}
 
+              {/* Tarjetas para profesores */}
               {type === "profesor" && (
                 <>
                   <div
@@ -219,6 +249,7 @@ function Dashboard() {
                 </>
               )}
 
+              {/* Tarjetas para administradores */}
               {type === "admin" && (
                 <>
                   <div
@@ -298,6 +329,7 @@ function Dashboard() {
       </motion.div>
     </>
   );
+  //#endregion
 }
-
 export default Dashboard;
+//#endregion

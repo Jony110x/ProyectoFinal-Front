@@ -1,3 +1,4 @@
+//#region IMPORTACIONES
 import { useState, useEffect, useRef, type JSX } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -13,55 +14,48 @@ import {
 } from "react-icons/fa";
 import logo from "../../assets/JyMchiquito.jpg";
 import axios from "axios";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface Notificacion {
   tipo: "mensaje" | "nota" | "pago" | "asignacion";
   texto: string;
 }
+//#endregion
 
+//#region COMPONENTE PRINCIPAL NAVBAR
 const Navbar = () => {
+  //#region ESTADOS Y HOOKS
   const navigate = useNavigate();
   const location = useLocation();
   const notifRef = useRef(null);
   const menuRef = useRef(null);
 
+  // Obtener datos del usuario desde localStorage
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const { 
-  firstName, 
-  lastName: lastName, 
-  id, 
-  type 
-} = user;
+    firstName, 
+    lastName: lastName, 
+    id, 
+    type 
+  } = user;
 
-console.log("Verificando nombres:", { firstName, lastName, id, type });
+  console.log("Verificando nombres:", { firstName, lastName, id, type });
 
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [mostrarNotif, setMostrarNotif] = useState(false);
   const [sinLeer, setSinLeer] = useState(0);
   const [menuAbierto, setMenuAbierto] = useState(false);
-
   const [acciones, setAcciones] = useState<
     { label: string; path: string; icon: JSX.Element }[]
   >([]);
+  //#endregion
 
-  const obtenerIniciales = () => {
-  // Verificar datos directamente del objeto user
-  if (user.firstName && user.lastName) {
-    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-  }
-  
-  // Fallbacks
-  if (user.firstName) return user.firstName[0].toUpperCase();
-  if (user.username) return user.username[0].toUpperCase();
-  if (user.email) return user.email[0].toUpperCase();
-  
-  return "U";
-};
-
-const iniciales = obtenerIniciales();
-
+  //#region EFECTOS Y LIFECYCLE
+  /**
+   * Configura las acciones de navegación según el tipo de usuario
+   */
   useEffect(() => {
-    // Acciones según el tipo de usuario
     const base = [{ label: "Inicio", path: "/dashboard", icon: <FaHome /> }];
 
     if (type === "admin") {
@@ -89,13 +83,16 @@ const iniciales = obtenerIniciales();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
+  /**
+   * Carga las notificaciones del usuario desde la API
+   */
   useEffect(() => {
     const cargarNotificaciones = async () => {
       try {
         const res = await axios.get(
           `https://proyectofinal-backend-1-uqej.onrender.com/notifications/${id}/${type}`
         );
-        setNotificaciones(res.data.slice(0, 5));
+        setNotificaciones(res.data.slice(0, 5)); // Limitar a 5 notificaciones
         setSinLeer(res.data.length);
       } catch (err) {
         console.error("Error al cargar notificaciones:", err);
@@ -105,6 +102,9 @@ const iniciales = obtenerIniciales();
     cargarNotificaciones();
   }, [id, type]);
 
+  /**
+   * Maneja el cierre de menús al hacer click fuera de ellos
+   */
   useEffect(() => {
     const handleClickOutside = (event: any) => {
       if (
@@ -125,30 +125,14 @@ const iniciales = obtenerIniciales();
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-  };
-
-  const handleAbrirNotificaciones = () => {
-    setMostrarNotif(!mostrarNotif);
-    setMenuAbierto(false); // Cerrar menú móvil si está abierto
-  };
-
-  const toggleMenuMovil = () => {
-    setMenuAbierto(!menuAbierto);
-    setMostrarNotif(false); // Cerrar notificaciones si están abiertas
-  };
-
-  const navegarYCerrarMenu = (path: string) => {
-    navigate(path);
-    setMenuAbierto(false);
-  };
-
+  /**
+   * Marca notificaciones como leídas cuando se navega a secciones relacionadas
+   */
   useEffect(() => {
     const ruta = location.pathname;
     const tiposLeidos: Notificacion["tipo"][] = [];
 
+    // Determinar qué tipos de notificaciones marcar como leídas según la ruta
     if (ruta === "/mensajes") tiposLeidos.push("mensaje");
     else if (ruta === "/vistaPagos") tiposLeidos.push("pago");
     else if (
@@ -159,6 +143,7 @@ const iniciales = obtenerIniciales();
       tiposLeidos.push("nota", "asignacion");
     }
 
+    // Filtrar notificaciones y actualizar estado
     if (tiposLeidos.length > 0) {
       const restantes = notificaciones.filter(
         (n) => !tiposLeidos.includes(n.tipo)
@@ -168,6 +153,7 @@ const iniciales = obtenerIniciales();
         setNotificaciones(restantes);
         setSinLeer(restantes.length);
 
+        // Marcar como leídas en el backend
         tiposLeidos.forEach((tipo) => {
           axios
             .post("https://proyectofinal-backend-1-uqej.onrender.com/notifications/marcar-tipo-leido", {
@@ -182,8 +168,63 @@ const iniciales = obtenerIniciales();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+  //#endregion
 
-  // Función para determinar si un botón está activo
+  //#region FUNCIONES PRINCIPALES
+  /**
+   * Cierra la sesión del usuario y redirige al login
+   */
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+    /**
+   * Obtiene las iniciales del usuario para mostrar en el avatar
+   */
+  const obtenerIniciales = () => {
+    // Verificar datos directamente del objeto user
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    
+    // Fallbacks en caso de que no estén disponibles los nombres
+    if (user.firstName) return user.firstName[0].toUpperCase();
+    if (user.username) return user.username[0].toUpperCase();
+    if (user.email) return user.email[0].toUpperCase();
+    
+    return "U"; // Inicial por defecto
+  };
+
+  const iniciales = obtenerIniciales();
+
+  /**
+   * Alterna la visibilidad del panel de notificaciones
+   */
+  const handleAbrirNotificaciones = () => {
+    setMostrarNotif(!mostrarNotif);
+    setMenuAbierto(false); // Cerrar menú móvil si está abierto
+  };
+
+  /**
+   * Alterna la visibilidad del menú móvil
+   */
+  const toggleMenuMovil = () => {
+    setMenuAbierto(!menuAbierto);
+    setMostrarNotif(false); // Cerrar notificaciones si están abiertas
+  };
+
+  /**
+   * Navega a una ruta y cierra el menú móvil
+   */
+  const navegarYCerrarMenu = (path: string) => {
+    navigate(path);
+    setMenuAbierto(false);
+  };
+
+  /**
+   * Determina si un botón de navegación está activo según la ruta actual
+   */
   const esActivo = (accion: { path: string; label: string }) => {
     const esUsuarios =
       accion.path === "/usuarios" &&
@@ -213,11 +254,15 @@ const iniciales = obtenerIniciales();
     return esUsuarios || esPerfil || esMaterias || esCareer || esPago ||
       location.pathname === accion.path;
   };
+  //#endregion
 
+  //#region RENDER 
   return (
     <nav className="bg-teal-50 border-b border-teal-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50">
+      
       {/* Grupo izquierdo: logo + botones desktop */}
       <div className="flex items-center gap-2 sm:gap-4">
+        
         {/* Logo */}
         <div className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
@@ -251,6 +296,7 @@ const iniciales = obtenerIniciales();
         
         {/* Grupo derecho móvil: campanita + hamburguesa */}
         <div className="flex md:hidden items-center gap-2">
+          
           {/* Campanita móvil */}
           <div className="relative" ref={notifRef}>
             <button
@@ -265,6 +311,7 @@ const iniciales = obtenerIniciales();
               )}
             </button>
 
+            {/* Panel de notificaciones móvil */}
             {mostrarNotif && (
               <div className="absolute right-0 top-10 mt-2 bg-white shadow-lg rounded-lg p-3 w-72 z-50 border border-teal-200">
                 <p className="text-sm font-bold mb-2 text-teal-800">Notificaciones</p>
@@ -279,11 +326,13 @@ const iniciales = obtenerIniciales();
                         key={i}
                         className="text-sm border-b border-gray-100 pb-2 text-gray-800 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                         onClick={async () => {
+                          // Navegar según el tipo de notificación
                           if (n.tipo === "mensaje") navigate("/mensajes");
                           else if (n.tipo === "nota") navigate("/materias");
                           else if (n.tipo === "asignacion") navigate("/users/:userId/materias");
                           else if (n.tipo === "pago") navigate("/vistaPagos");
 
+                          // Marcar como leída en el backend
                           try {
                             await axios.post(
                               "https://proyectofinal-backend-1-uqej.onrender.com/notifications/marcar-leida",
@@ -293,6 +342,7 @@ const iniciales = obtenerIniciales();
                             console.error("Error al marcar como leída:", err);
                           }
 
+                          // Actualizar estado local
                           setNotificaciones((prev) => prev.filter((_, index) => index !== i));
                           setSinLeer((prev) => Math.max(prev - 1, 0));
                           setMostrarNotif(false);
@@ -300,6 +350,7 @@ const iniciales = obtenerIniciales();
                         }}
                       >
                         <div className="flex items-start gap-2">
+                          {/* Indicador de tipo de notificación */}
                           <span className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                             n.tipo === 'mensaje' ? 'bg-blue-500' :
                             n.tipo === 'nota' ? 'bg-green-500' :
@@ -318,7 +369,7 @@ const iniciales = obtenerIniciales();
             )}
           </div>
 
-          {/* Menú móvil - Hamburguesa (AHORA DESPUÉS DE LA CAMPANITA) */}
+          {/* Menú móvil - Hamburguesa */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={toggleMenuMovil}
@@ -375,6 +426,7 @@ const iniciales = obtenerIniciales();
 
         {/* Grupo derecho desktop: avatar + campanita + logout */}
         <div className="hidden md:flex items-center gap-4">
+          
           {/* Avatar */}
           <button
             onClick={() => navigate("/profile")}
@@ -406,6 +458,7 @@ const iniciales = obtenerIniciales();
               )}
             </button>
 
+            {/* Panel de notificaciones desktop */}
             {mostrarNotif && (
               <div className="absolute right-0 top-12 mt-2 bg-white shadow-lg rounded-lg p-4 w-80 z-50 border border-teal-200">
                 <p className="text-sm font-bold mb-3 text-teal-800">Notificaciones</p>
@@ -449,6 +502,7 @@ const iniciales = obtenerIniciales();
                         }}
                       >
                         <div className="flex items-start gap-2">
+                          {/* Indicador de tipo de notificación */}
                           <span className={`inline-block w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                             n.tipo === 'mensaje' ? 'bg-blue-500' :
                             n.tipo === 'nota' ? 'bg-green-500' :
@@ -479,6 +533,8 @@ const iniciales = obtenerIniciales();
       </div>
     </nav>
   );
+  //#endregion
 };
 
 export default Navbar;
+//#endregion

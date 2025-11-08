@@ -1,6 +1,9 @@
+//#region IMPORTACIONES
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region INTERFACES Y TYPES
 interface Deudor {
   id: number;
   username: string;
@@ -26,8 +29,9 @@ const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -49,8 +53,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL DEUDORES
 export default function Deudores() {
+  //#region ESTADOS Y HOOKS
   const [deudores, setDeudores] = useState<Deudor[]>([]);
   const [deudoresFiltrados, setDeudoresFiltrados] = useState<Deudor[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,48 +69,19 @@ export default function Deudores() {
   const [mesActual, setMesActual] = useState<number>(0);
   const [anioActual, setAnioActual] = useState<number>(0);
   const [buscando, setBuscando] = useState(false);
+  //#endregion
 
+  //#region TOAS
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
+  //#endregion
 
-  useEffect(() => {
-    fetchDeudores(true);
-  }, []);
-
-  // Infinite scroll listener
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
-        !loading &&
-        nextCursor !== null &&
-        searchTerm.trim() === ""
-      ) {
-        fetchDeudores(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loading, nextCursor, searchTerm]);
-
-  // Buscar cuando cambia el searchTerm (con debounce)
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setDeudoresFiltrados(deudores);
-      setBuscando(false);
-      return;
-    }
-
-    setBuscando(true);
-    const timeoutId = setTimeout(() => {
-      buscarDeudores(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, deudores]);
-
+  //#region FUNCIONES DE DATOS
+  /**
+   * Obtiene la lista de deudores desde la API
+   */
   const fetchDeudores = async (reload = false) => {
     setLoading(true);
     try {
@@ -139,6 +117,9 @@ export default function Deudores() {
     }
   };
 
+  /**
+   * Busca deudores según el término ingresado
+   */
   const buscarDeudores = async (query: string) => {
     if (!query.trim()) {
       setDeudoresFiltrados(deudores);
@@ -165,17 +146,28 @@ export default function Deudores() {
       setLoading(false);
     }
   };
+  //#endregion
 
+  //#region FUNCIONES DE INTERACCIÓN
+  /**
+   * Maneja el registro de pago para un deudor
+   */
   const handleRegistrarPago = (deudor: Deudor) => {
     console.log("Registrar pago para:", deudor);
     // navigate("/pagos", { state: { userId: deudor.id, userName: deudor.fullname, carerId: deudor.carer_id } });
   };
 
+  /**
+   * Maneja la navegación de vuelta a la vista de pagos
+   */
   const handleVolver = () => {
     console.log("Volver a vista pagos");
     // navigate("/vistaPagos");
   };
 
+  /**
+   * Exporta la lista de deudores a formato CSV
+   */
   const exportarCSV = () => {
     setExportando(true);
     try {
@@ -214,9 +206,51 @@ export default function Deudores() {
       setExportando(false);
     }
   };
+  //#endregion
 
+  //#region EFFECTS Y LIFECYCLE
+  // Effect para cargar datos iniciales
+  useEffect(() => {
+    fetchDeudores(true);
+  }, []);
+
+  // Effect para infinite scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+        !loading &&
+        nextCursor !== null &&
+        searchTerm.trim() === ""
+      ) {
+        fetchDeudores(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, nextCursor, searchTerm]);
+
+  // Effect para búsqueda con debounce
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setDeudoresFiltrados(deudores);
+      setBuscando(false);
+      return;
+    }
+
+    setBuscando(true);
+    const timeoutId = setTimeout(() => {
+      buscarDeudores(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, deudores]);
+  //#endregion
+
+  //#region RENDER 
   return (
     <>
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -227,7 +261,7 @@ export default function Deudores() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="py-6">
-          {/* Header */}
+          {/* Header y Controles */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <div className="flex items-center gap-3">
@@ -254,6 +288,7 @@ export default function Deudores() {
               )}
             </div>
             
+            {/* Botón de exportación */}
             <button
               onClick={exportarCSV}
               disabled={exportando || deudoresFiltrados.length === 0}
@@ -266,7 +301,7 @@ export default function Deudores() {
             </button>
           </div>
 
-          {/* Buscador */}
+          {/* Barra de Búsqueda */}
           <div className="mb-4 relative">
             <input
               type="text"
@@ -290,6 +325,7 @@ export default function Deudores() {
             )}
           </div>
 
+          {/* Estados de carga y resultados */}
           {/* Loading inicial */}
           {loading && deudores.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
@@ -298,7 +334,7 @@ export default function Deudores() {
             </div>
           )}
 
-          {/* Sin resultados */}
+          {/* Sin resultados sin búsqueda */}
           {!loading && deudores.length === 0 && !searchTerm && (
             <div className="text-center py-12">
               <svg className="w-20 h-20 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +356,7 @@ export default function Deudores() {
             </div>
           )}
 
-          {/* Tabla Desktop */}
+          {/* Vista de Escritorio - Tabla */}
           {deudoresFiltrados.length > 0 && (
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full border border-gray-200 rounded-md">
@@ -365,7 +401,7 @@ export default function Deudores() {
             </div>
           )}
 
-          {/* Cards Mobile */}
+          {/* Vista Móvil - Cards */}
           {deudoresFiltrados.length > 0 && (
             <div className="block lg:hidden space-y-4">
               {deudoresFiltrados.map((deudor, index) => (
@@ -421,7 +457,7 @@ export default function Deudores() {
             </div>
           )}
 
-          {/* Loading más resultados */}
+          {/* Loading de más resultados */}
           {loading && deudores.length > 0 && !searchTerm && (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
@@ -429,7 +465,7 @@ export default function Deudores() {
             </div>
           )}
 
-          {/* Footer info */}
+          {/* Información del pie */}
           {deudoresFiltrados.length > 0 && (
             <div className="mt-6 pt-4 border-t text-center text-sm text-gray-600">
               Mostrando {deudoresFiltrados.length} de {searchTerm ? deudoresFiltrados.length : (totalCount !== null ? totalCount : deudores.length)} deudores
@@ -444,4 +480,6 @@ export default function Deudores() {
       </motion.div>
     </>
   );
+  //#endregion
 }
+//#endregion

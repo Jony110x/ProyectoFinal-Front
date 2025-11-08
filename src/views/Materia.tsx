@@ -1,9 +1,12 @@
+//#region IMPORTACIONES
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+//#endregion
 
+//#region TIPOS E INTERFACES
 type MateriaType = {
   id: number;
   name: string;
@@ -23,8 +26,9 @@ type EstudianteType = {
   DNI: number;
   email: string;
 };
+//#endregion
 
-// Componente Toast
+//#region COMPONENTE TOAST
 const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
   return (
     <motion.div
@@ -46,8 +50,11 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </motion.div>
   );
 };
+//#endregion
 
+//#region COMPONENTE PRINCIPAL MATERIAS
 function Materias() {
+  //#region ESTADOS Y HOOKS
   const navigate = useNavigate();
   const { careerId } = useParams();
   const [materias, setMateria] = useState<MateriaType[]>([]);
@@ -87,12 +94,19 @@ function Materias() {
 
   const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
   const userType = JSON.parse(localStorage.getItem("user") || "{}").type;
+  //#endregion
 
+  //#region TOAS
   const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
     setToast({ text, type });
-    setTimeout(() => setToast(null), 1000); // 1 segundo
+    setTimeout(() => setToast(null), 1000);
   };
+  //#endregion
 
+  //#region FUNCIONES DE DATOS
+  /**
+   * Obtiene la lista de materias según el tipo de usuario
+   */
   const fetchMateria = async () => {
     try {
       if (userType === "profesor" && userId) {
@@ -115,6 +129,9 @@ function Materias() {
     }
   };
 
+  /**
+   * Obtiene la lista de profesores disponibles
+   */
   const fetchProfesores = async () => {
     try {
       const res = await axios.get<ProfesorType[]>(
@@ -127,6 +144,9 @@ function Materias() {
     }
   };
 
+  /**
+   * Obtiene los estudiantes inscritos en una materia específica
+   */
   const fetchEstudiantes = async (materiaId: number) => {
     try {
       const res = await axios.get(
@@ -154,6 +174,9 @@ function Materias() {
     }
   };
 
+  /**
+   * Maneja el cambio de notas de los estudiantes
+   */
   const handleNotaChange = (
     materiaId: number,
     estudianteId: number,
@@ -168,6 +191,9 @@ function Materias() {
     }));
   };
 
+  /**
+   * Guarda las notas de los estudiantes en el backend
+   */
   const guardarNotas = async (materiaId: number) => {
     const notas = notasPorMateria[materiaId];
     const data = Object.entries(notas).map(([user_id, nota]) => ({
@@ -190,7 +216,12 @@ function Materias() {
       showToast("❌ Error al guardar notas", "error");
     }
   };
+  //#endregion
 
+  //#region FUNCIONES DE GESTIÓN DE MATERIAS
+  /**
+   * Agrega una nueva materia al sistema
+   */
   const handleAddMateria = async () => {
     if (newMateriaName.trim() === "") {
       showToast("⚠️ Ingresa un nombre para la materia", "warning");
@@ -211,49 +242,9 @@ function Materias() {
     }
   };
 
-  const handleAsignarProfesorClick = async (materiaId: number) => {
-    setMateriaParaAsignar(materiaId);
-    setSelectedProfesorId(null);
-    await fetchProfesores();
-  };
-
-  const handleConfirmarAsignacion = async () => {
-    if (!selectedProfesorId || !materiaParaAsignar) {
-      showToast("⚠️ Selecciona un profesor", "warning");
-      return;
-    }
-    try {
-      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/users/asignar-materia", {
-        user_id: selectedProfesorId,
-        materia_id: materiaParaAsignar,
-        tipo_relacion: "profesor",
-      });
-      setAsignadas((prev) => ({ ...prev, [materiaParaAsignar]: true }));
-      setMateriaParaAsignar(null);
-      setSelectedProfesorId(null);
-      showToast("✅ Profesor asignado correctamente", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Error al asignar profesor", "error");
-    }
-  };
-
-  const handleInscribirse = async (materiaId: number) => {
-    try {
-      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/users/asignar-materia", {
-        user_id: Number(userId),
-        materia_id: materiaId,
-        tipo_relacion: "estudiante",
-      });
-
-      setInscripciones((prev) => ({ ...prev, [materiaId]: true }));
-      showToast("✅ Inscripción realizada correctamente", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Error al inscribirse en la materia", "error");
-    }
-  };
-
+  /**
+   * Edita el nombre de una materia existente
+   */
   const handleEditMateria = async (materiaId: number) => {
     const materia = materias.find((m) => m.id === materiaId);
     if (!materia) return;
@@ -277,10 +268,16 @@ function Materias() {
     }
   };
 
+  /**
+   * Elimina una materia del sistema
+   */
   const handleDeleteMateria = async (materiaId: number) => {
     setDeleteConfirmId(materiaId);
   };
 
+  /**
+   * Confirma la eliminación de una materia
+   */
   const confirmDeleteMateria = async (materiaId: number) => {
     try {
       await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/materia/${materiaId}/delete`);
@@ -293,14 +290,75 @@ function Materias() {
     }
   };
 
+  /**
+   * Cancela la eliminación de una materia
+   */
   const cancelDeleteMateria = () => {
     setDeleteConfirmId(null);
   };
+  //#endregion
 
+  //#region FUNCIONES DE ASIGNACIÓN E INSCRIPCIÓN
+  /**
+   * Prepara la asignación de un profesor a una materia
+   */
+  const handleAsignarProfesorClick = async (materiaId: number) => {
+    setMateriaParaAsignar(materiaId);
+    setSelectedProfesorId(null);
+    await fetchProfesores();
+  };
+
+  /**
+   * Confirma la asignación de un profesor a una materia
+   */
+  const handleConfirmarAsignacion = async () => {
+    if (!selectedProfesorId || !materiaParaAsignar) {
+      showToast("⚠️ Selecciona un profesor", "warning");
+      return;
+    }
+    try {
+      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/users/asignar-materia", {
+        user_id: selectedProfesorId,
+        materia_id: materiaParaAsignar,
+        tipo_relacion: "profesor",
+      });
+      setAsignadas((prev) => ({ ...prev, [materiaParaAsignar]: true }));
+      setMateriaParaAsignar(null);
+      setSelectedProfesorId(null);
+      showToast("✅ Profesor asignado correctamente", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Error al asignar profesor", "error");
+    }
+  };
+
+  /**
+   * Maneja la inscripción de un estudiante a una materia
+   */
+  const handleInscribirse = async (materiaId: number) => {
+    try {
+      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/users/asignar-materia", {
+        user_id: Number(userId),
+        materia_id: materiaId,
+        tipo_relacion: "estudiante",
+      });
+
+      setInscripciones((prev) => ({ ...prev, [materiaId]: true }));
+      showToast("✅ Inscripción realizada correctamente", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Error al inscribirse en la materia", "error");
+    }
+  };
+  //#endregion
+
+  //#region EFFECTS Y LIFECYCLE
+  // Effect para cargar materias
   useEffect(() => {
     fetchMateria();
   }, [careerId]);
 
+  // Effect para cargar materias asignadas
   useEffect(() => {
     const fetchMateriasAsignadas = async () => {
       try {
@@ -320,6 +378,7 @@ function Materias() {
     fetchMateriasAsignadas();
   }, []);
 
+  // Effect para cargar materias inscriptas del estudiante
   useEffect(() => {
     const fetchMateriasInscriptas = async () => {
       try {
@@ -345,6 +404,7 @@ function Materias() {
     }
   }, [userType, userId]);
 
+  // Effect para manejar el foco en los inputs
   useEffect(() => {
     if (showForm && inputRef.current) {
       inputRef.current.focus();
@@ -353,13 +413,15 @@ function Materias() {
       editInputRef.current.focus();
     }
   }, [showForm, editMateriaId]);
+  //#endregion
 
+  //#region RENDER
   if (loading) return <p className="text-center p-4">Cargando materias...</p>;
   if (error) return <p className="text-red-600 text-center p-4">{error}</p>;
 
   return (
     <>
-      {/* Toast container */}
+      {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
       
       <motion.div
@@ -370,11 +432,14 @@ function Materias() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="py-6">
+          {/* Header de la página */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl sm:text-2xl font-bold text-teal-800 flex-1 text-center">
               Materias
             </h2>
           </div>
+
+          {/* Información y controles */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 text-sm text-teal-700">
             <span className="text-center sm:text-left">
               {userType === "estudiante"
@@ -394,10 +459,12 @@ function Materias() {
             )}
           </div>
           
+          {/* Lista de materias */}
           <ul className="divide-y divide-gray-200">
             {materias.map((subject) => (
               <li key={subject.id} className="py-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  {/* Nombre de la materia */}
                   <div className="flex-1 flex items-center gap-2">
                     {userType === "profesor" ? (
                       <button
@@ -413,8 +480,10 @@ function Materias() {
                     )}
                   </div>
 
+                  {/* Acciones para administradores */}
                   {userType === "admin" && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-wrap w-full sm:w-auto">
+                      {/* Asignación de profesores */}
                       {!asignadas[subject.id] ? (
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                           <button
@@ -457,6 +526,7 @@ function Materias() {
                         </button>
                       )}
 
+                      {/* Edición y eliminación */}
                       <div className="flex gap-2 mt-2 sm:mt-0">
                         {editMateriaId === subject.id ? (
                           <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -516,6 +586,7 @@ function Materias() {
                     </div>
                   )}
 
+                  {/* Inscripción para estudiantes */}
                   {userType === "estudiante" && (
                     <button
                       className={`w-full sm:w-auto px-4 py-2 rounded text-sm text-white ${
@@ -531,6 +602,7 @@ function Materias() {
                   )}
                 </div>
 
+                {/* Panel de estudiantes y notas para profesores */}
                 {userType === "profesor" && materiaExpandida === subject.id && (
                   <div className="mt-4 bg-gray-50 p-4 rounded-lg">
                     <div className="overflow-x-auto">
@@ -601,6 +673,7 @@ function Materias() {
             ))}
           </ul>
           
+          {/* Formulario para agregar materias (solo admin) */}
           {userType === "admin" && !showForm && (
             <div className="mt-6 text-center">
               <button
@@ -645,6 +718,7 @@ function Materias() {
       </motion.div>
     </>
   );
+  //#endregion
 }
-
 export default Materias;
+//#endregion
