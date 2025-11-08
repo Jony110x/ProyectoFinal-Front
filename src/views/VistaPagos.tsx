@@ -2,6 +2,7 @@ import React, { useEffect, useState, Fragment } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import DeudoresButton from "./DeudoresButton";
 
 type Props = {
   type?: string;
@@ -23,12 +24,18 @@ interface Carer {
 }
 
 // Componente Toast
-const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" | "warning" }) => {
+const Toast = ({
+  message,
+  type,
+}: {
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+}) => {
   return (
     <motion.div
       className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
-        type === "success" 
-          ? "bg-green-500 text-white" 
+        type === "success"
+          ? "bg-green-500 text-white"
           : type === "error"
           ? "bg-red-500 text-white"
           : type === "warning"
@@ -50,7 +57,10 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
   const [pagosFiltrados, setPagosFiltrados] = useState<Pago[]>([]);
   const [carers, setCarers] = useState<Carer[]>([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; text: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error" | "info" | "warning";
+    text: string;
+  } | null>(null);
   const [pagoEditando, setPagoEditando] = useState<Pago | null>(null);
   const [pagoAConfirmar, setPagoAConfirmar] = useState<number | null>(null);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -61,11 +71,14 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
   const userId = user.id;
   const userType = user.type || type;
   const userUsername = username || user.username;
-  
+
   const isAdmin = userType === "admin";
   const navigate = useNavigate();
 
-  const showToast = (text: string, type: "success" | "error" | "info" | "warning") => {
+  const showToast = (
+    text: string,
+    type: "success" | "error" | "info" | "warning"
+  ) => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 1000); // 1 segundo
   };
@@ -87,7 +100,8 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
   useEffect(() => {
     const handleScroll = () => {
       if (
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+        window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 200 &&
         !loading &&
         nextCursor !== null &&
         busqueda.trim() === ""
@@ -103,7 +117,7 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
     setLoading(true);
     try {
       const token = localStorage.getItem("token") || "";
-      
+
       // ✅ SI ES ESTUDIANTE, USAR ENDPOINT ESPECÍFICO
       if (!isAdmin && userUsername) {
         const res = await axios.get(
@@ -112,16 +126,16 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        
+
         const nuevosPagos: Pago[] = res.data.map((pago: any) => ({
           id: pago.id,
           amount: pago.amount,
           affected_month: pago.affected_month,
           carer: pago.carer,
           carer_id: pago.carer_id || 0,
-          username: pago.username
+          username: pago.username,
         }));
-        
+
         setPagos(nuevosPagos);
         setNextCursor(null);
         return;
@@ -171,11 +185,12 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
     try {
       // ✅ SI ES ESTUDIANTE, buscar solo en sus pagos cargados
       if (!isAdmin) {
-        const filtrados = pagos.filter(pago => 
-          pago.username?.toLowerCase().includes(query.toLowerCase()) ||
-          pago.carer.toLowerCase().includes(query.toLowerCase()) ||
-          pago.amount.toString().includes(query) ||
-          pago.affected_month.includes(query)
+        const filtrados = pagos.filter(
+          (pago) =>
+            pago.username?.toLowerCase().includes(query.toLowerCase()) ||
+            pago.carer.toLowerCase().includes(query.toLowerCase()) ||
+            pago.amount.toString().includes(query) ||
+            pago.affected_month.includes(query)
         );
         setPagosFiltrados(filtrados);
         setLoading(false);
@@ -184,14 +199,14 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
 
       // ✅ SI ES ADMIN, usar endpoint de búsqueda
       const token = localStorage.getItem("token") || "";
-      const params = new URLSearchParams({ 
-        q: query, 
-        limit: "50", 
-        offset: "0" 
+      const params = new URLSearchParams({
+        q: query,
+        limit: "50",
+        offset: "0",
       });
 
       const res = await axios.get(
-        `https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`, 
+        `https://proyectofinal-backend-1-uqej.onrender.com/payment/search?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -210,11 +225,14 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
     e.preventDefault();
     if (!pagoEditando) return;
     try {
-      await axios.put(`https://proyectofinal-backend-1-uqej.onrender.com/payment/${pagoEditando.id}`, {
-        carer_id: pagoEditando.carer_id,
-        amount: pagoEditando.amount,
-        affected_month: pagoEditando.affected_month,
-      });
+      await axios.put(
+        `https://proyectofinal-backend-1-uqej.onrender.com/payment/${pagoEditando.id}`,
+        {
+          carer_id: pagoEditando.carer_id,
+          amount: pagoEditando.amount,
+          affected_month: pagoEditando.affected_month,
+        }
+      );
       showToast("✅ Pago actualizado correctamente", "success");
       setPagoEditando(null);
       cargarPagos(true);
@@ -225,7 +243,9 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
 
   const handleEliminarPago = async (id: number) => {
     try {
-      await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/payment/${id}`);
+      await axios.delete(
+        `https://proyectofinal-backend-1-uqej.onrender.com/payment/${id}`
+      );
       setPagos((prev) => prev.filter((p) => p.id !== id));
       showToast("✅ Pago eliminado correctamente", "success");
     } catch {
@@ -257,7 +277,7 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
     <>
       {/* Toast container */}
       {toast && <Toast message={toast.text} type={toast.type} />}
-      
+
       <motion.div
         className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
         initial={{ opacity: 0, x: -50 }}
@@ -271,19 +291,26 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
               {isAdmin ? "Todos los Pagos" : "Mis Pagos"}
             </h2>
             {isAdmin && (
-              <button
-                onClick={handleNavigateToAddPago}
-                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
-              >
-                + Agregar Pago
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <DeudoresButton />
+                <button
+                  onClick={handleNavigateToAddPago}
+                  className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
+                >
+                  + Agregar Pago
+                </button>
+              </div>
             )}
           </div>
 
           {/* BARRA DE BUSQUEDA */}
           <input
             type="text"
-            placeholder={isAdmin ? "Buscar en todos los pagos..." : "Buscar en mis pagos..."}
+            placeholder={
+              isAdmin
+                ? "Buscar en todos los pagos..."
+                : "Buscar en mis pagos..."
+            }
             value={busqueda}
             onChange={(e) => buscarPagos(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-teal-400 text-sm sm:text-base"
@@ -291,7 +318,9 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
 
           {pagosFiltrados.length === 0 && !loading && (
             <p className="text-center text-gray-500 py-8">
-              {isAdmin ? "No hay pagos para mostrar." : "No tienes pagos registrados."}
+              {isAdmin
+                ? "No hay pagos para mostrar."
+                : "No tienes pagos registrados."}
             </p>
           )}
 
@@ -315,7 +344,9 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                       <td className="py-2 px-4">{p.id}</td>
                       {isAdmin && <td className="py-2 px-4">{p.username}</td>}
                       <td className="py-2 px-4">${p.amount}</td>
-                      <td className="py-2 px-4">{p.affected_month.slice(0, 10)}</td>
+                      <td className="py-2 px-4">
+                        {p.affected_month.slice(0, 10)}
+                      </td>
                       <td className="py-2 px-4">{p.carer}</td>
                       {isAdmin && (
                         <td className="py-2 px-4 align-middle">
@@ -359,10 +390,15 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                     {pagoEditando?.id === p.id && (
                       <tr className="bg-gray-100">
                         <td colSpan={isAdmin ? 6 : 5} className="p-4">
-                          <form onSubmit={handleGuardarPago} className="space-y-4">
+                          <form
+                            onSubmit={handleGuardarPago}
+                            className="space-y-4"
+                          >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-sm mb-1">Monto</label>
+                                <label className="block text-sm mb-1">
+                                  Monto
+                                </label>
                                 <input
                                   type="number"
                                   value={pagoEditando.amount}
@@ -376,10 +412,15 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm mb-1">Mes Afectado</label>
+                                <label className="block text-sm mb-1">
+                                  Mes Afectado
+                                </label>
                                 <input
                                   type="date"
-                                  value={pagoEditando.affected_month.slice(0, 10)}
+                                  value={pagoEditando.affected_month.slice(
+                                    0,
+                                    10
+                                  )}
                                   onChange={(e) =>
                                     setPagoEditando({
                                       ...pagoEditando,
@@ -390,7 +431,9 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm mb-1">Materia</label>
+                                <label className="block text-sm mb-1">
+                                  Materia
+                                </label>
                                 <select
                                   value={pagoEditando.carer_id}
                                   onChange={(e) =>
@@ -399,7 +442,8 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                                       carer_id: parseInt(e.target.value),
                                       carer:
                                         carers.find(
-                                          (c) => c.id === parseInt(e.target.value)
+                                          (c) =>
+                                            c.id === parseInt(e.target.value)
                                         )?.name || "",
                                     })
                                   }
@@ -441,7 +485,10 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
           {/* Vista de cards para móvil */}
           <div className="block lg:hidden space-y-4">
             {pagosFiltrados.map((p, index) => (
-              <div key={`${p.id}-${index}`} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div
+                key={`${p.id}-${index}`}
+                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+              >
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="font-semibold">ID:</span>
@@ -465,7 +512,7 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                     <span className="font-semibold">Carrera:</span>
                     <span>{p.carer}</span>
                   </div>
-                  
+
                   {isAdmin && (
                     <div className="pt-3 border-t mt-2">
                       {pagoAConfirmar === p.id ? (

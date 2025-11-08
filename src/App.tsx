@@ -18,6 +18,7 @@ function App() {
   const BandejaMensajes = lazy (() => import("./views/BandejaMensajes"))
   const EditarUsuario = lazy (() => import("./views/EditarUsuario"))
   const RegistroUsuario = lazy (() => import("./componets/routes/Register"))
+  const Deudores = lazy(() => import("./views/Deudores"));
 
   return (
     <BrowserRouter>
@@ -42,6 +43,7 @@ function App() {
             <Route path="/users/:userId/materias" element={<Materias />} />
             <Route path="/materias" element={<CareerEstudiante />} />
             <Route path="/career" element={<Career />} />
+            <Route path="/deudores" element={<Deudores />} />
           </Route>
         </Route>
       </Routes>
