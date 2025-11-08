@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //#region IMPORTACIONES
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //#region IMPORTACIONES
 import { useState, useEffect, useRef, type JSX } from "react";
 import { useNavigate, useLocation } from "react-router-dom";

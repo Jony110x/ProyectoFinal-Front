@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 //#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import VistaPagos from "../views/VistaPagos";

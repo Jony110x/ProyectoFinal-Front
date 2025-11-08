@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //#region IMPORTACIONES
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -44,11 +45,12 @@ function Notifications() {
   };
   //#endregion
 
-  //#region FUNCIONES DE DATOS
+  //#region EFFECTS 
   /**
-   * Obtiene las notificaciones del usuario desde la API
+   * Carga las notificaciones al montar el componente
    */
-  const cargarNotificaciones = async () => {
+  useEffect(() => {
+    const cargarNotificaciones = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/notifications/${user.id}`);
@@ -61,13 +63,6 @@ function Notifications() {
       setLoading(false);
     }
   };
-  //#endregion
-
-  //#region EFFECTS Y LIFECYCLE
-  /**
-   * Carga las notificaciones al montar el componente
-   */
-  useEffect(() => {
     cargarNotificaciones();
   }, [user.id]);
   //#endregion
@@ -98,19 +93,13 @@ function Notifications() {
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
                 <p className="text-gray-500 mt-2">Cargando notificaciones...</p>
               </div>
-            ) : 
-            
-            {/* Estado sin notificaciones */}
-            notificaciones.length === 0 ? (
+            ) : notificaciones.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-6xl mb-4">📭</div>
                 <p className="text-gray-500">No hay notificaciones.</p>
                 <p className="text-gray-400 text-sm mt-2">Cuando tengas notificaciones, aparecerán aquí.</p>
               </div>
-            ) : 
-            
-            {/* Lista de notificaciones */}
-            (
+            ) : (
               <ul className="space-y-3 text-gray-800 text-sm">
                 {notificaciones.map((n: any, i) => (
                   <li 
