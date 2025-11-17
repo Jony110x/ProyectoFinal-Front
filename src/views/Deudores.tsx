@@ -1,6 +1,7 @@
 //#region IMPORTACIONES
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 //#endregion
 
 //#region INTERFACES Y TYPES
@@ -69,6 +70,7 @@ export default function Deudores() {
   const [mesActual, setMesActual] = useState<number>(0);
   const [anioActual, setAnioActual] = useState<number>(0);
   const [buscando, setBuscando] = useState(false);
+  const navigate = useNavigate();
   //#endregion
 
   //#region TOAS
@@ -154,7 +156,7 @@ export default function Deudores() {
    */
   const handleRegistrarPago = (deudor: Deudor) => {
     console.log("Registrar pago para:", deudor);
-    // navigate("/pagos", { state: { userId: deudor.id, userName: deudor.fullname, carerId: deudor.carer_id } });
+    navigate("/pagos", { state: { userId: deudor.id, userName: deudor.fullname, carerId: deudor.carer_id } });
   };
 
   /**
@@ -162,7 +164,7 @@ export default function Deudores() {
    */
   const handleVolver = () => {
     console.log("Volver a vista pagos");
-    // navigate("/vistaPagos");
+    navigate("/vistaPagos");
   };
 
   /**
@@ -374,7 +376,7 @@ export default function Deudores() {
                 <tbody>
                   {deudoresFiltrados.map((deudor, index) => (
                     <motion.tr
-                      key={deudor.id}
+                      key={`${deudor.id}-${index}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
@@ -406,7 +408,7 @@ export default function Deudores() {
             <div className="block lg:hidden space-y-4">
               {deudoresFiltrados.map((deudor, index) => (
                 <motion.div
-                  key={deudor.id}
+                  key={`${deudor.id}-${index}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.02 }}

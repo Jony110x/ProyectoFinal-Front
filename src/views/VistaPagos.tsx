@@ -81,6 +81,7 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
   const userUsername = username || user.username;
 
   const isAdmin = userType === "admin";
+  const isEstudiante = userType === "estudiante"
   const navigate = useNavigate();
   //#endregion
 
@@ -273,6 +274,23 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
       navigate("/pagos");
     }, 300);
   };
+  /**
+   * Navega a la página de mercado pago
+   */
+  const pagar = async () => {
+    const res = await fetch("https://proyectofinal-backend-1-uqej.onrender.com/mercado-pago/crear-pago", {
+        method: "POST"
+    });
+
+    const data = await res.json();
+    console.log("MP RESPONSE:", data);
+
+    if (data.init_point) {
+        window.location.href = data.init_point;
+    } else {
+        alert("Error al generar pago");
+    }
+  }
   //#endregion
 
   //#region EFFECTS Y LIFECYCLE
@@ -342,6 +360,16 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
                   className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
                 >
                   + Agregar Pago
+                </button>
+              </div>
+            )}
+            {isEstudiante && (
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <button
+                  onClick={pagar}
+                  className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md shadow text-sm sm:text-base"
+                >
+                  Pagar con Mercado Pago
                 </button>
               </div>
             )}

@@ -89,6 +89,7 @@ export default function BandejaMensajes() {
   const observerRef = useRef<HTMLDivElement | null>(null);
   const mensajeRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
   //#endregion
 
   //#region FUNCIONES DE UTILIDAD
@@ -118,9 +119,7 @@ export default function BandejaMensajes() {
    */
   const fetchMensajes = async () => {
     try {
-      const res = await axios.get(
-        `https://proyectofinal-backend-1-uqej.onrender.com/messages/${user.id}`
-      );
+      const res = await axios.get(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${user.id}`);
       setMensajes(res.data);
     } catch (err) {
       console.error(err);
@@ -192,13 +191,9 @@ export default function BandejaMensajes() {
     }
 
     try {
-      await axios.post(
-        "https://proyectofinal-backend-1-uqej.onrender.com/messages/send",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      await axios.post("https://proyectofinal-backend-1-uqej.onrender.com/messages/send", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       setNuevoMensaje("");
       setArchivoAdjunto(null);
       if (fileInputRef.current) {
@@ -227,9 +222,7 @@ export default function BandejaMensajes() {
       return;
     }
     try {
-      await axios.delete(
-        `https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`
-      );
+      await axios.delete(`https://proyectofinal-backend-1-uqej.onrender.com/messages/${id}`);
       fetchMensajes();
       showToast("✅ Mensaje eliminado", "success");
     } catch (err) {
@@ -243,7 +236,6 @@ export default function BandejaMensajes() {
    */
   const eliminarChat = async () => {
     if (!conversacionSeleccionada) return;
-    if (!confirm("¿Seguro querés eliminar todo el chat?")) return;
 
     try {
       await axios.delete(
@@ -252,9 +244,11 @@ export default function BandejaMensajes() {
       fetchMensajes();
       setConversacionSeleccionada(null);
       showToast("✅ Chat eliminado", "success");
+      setMostrarModal(false);
     } catch (err) {
       console.error(err);
       showToast("❌ Error al eliminar chat", "error");
+      setMostrarModal(false);
     }
   };
   //#endregion
@@ -393,7 +387,7 @@ export default function BandejaMensajes() {
   };
   //#endregion
 
-  //#region RENDER 
+  //#region RENDER
   return (
     <>
       {/* Notificaciones Toast */}
@@ -506,12 +500,41 @@ export default function BandejaMensajes() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                     <h3 className="font-bold text-teal-800 text-lg">Chat</h3>
                     <button
-                      onClick={eliminarChat}
+                      onClick={() => setMostrarModal(true)}
                       className="text-red-600 hover:underline flex items-center gap-1 text-sm"
                     >
                       <FaTrash className="text-xs" /> Eliminar chat
                     </button>
                   </div>
+
+                  {/* Modal de confirmación */}
+                  {mostrarModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+                        <h3 className="text-lg font-bold text-gray-900 mb-3">
+                          Eliminar chat
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          ¿Seguro querés eliminar todo el chat? Esta acción no
+                          se puede deshacer.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                          <button
+                            onClick={() => setMostrarModal(false)}
+                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={eliminarChat}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Área de mensajes */}
                   <div
