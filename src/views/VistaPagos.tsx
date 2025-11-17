@@ -128,7 +128,7 @@ export default function VistaPagos({ type = "estudiante", username }: Props) {
       }
 
       // ✅ SI ES ADMIN, USAR PAGINADO NORMAL
-      const body: any = { limit: 10 };
+      const body: any = { limit: 20 };
       if (!reload && nextCursor) body.last_seen_id = nextCursor;
 
       const res = await axios.post(
