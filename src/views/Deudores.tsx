@@ -172,7 +172,7 @@ export default function Deudores() {
   const exportarCSV = () => {
     setExportando(true);
     try {
-      const headers = ["DNI", "Nombre Completo", "Usuario", "Email", "Carrera", "Pagos Realizados"];
+      const headers = ["DNI", "Nombre Completo", "Usuario", "Email", "Pagos Realizados"];
       const rows = deudoresFiltrados.map(d => [
         d.dni,
         d.fullname,
