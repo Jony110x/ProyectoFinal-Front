@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { FaPaperclip, FaTrash, FaTimes } from "react-icons/fa";
+import { motion } from "framer-motion";
 //#endregion
 
 //#region INTERFACES Y TYPES
@@ -31,17 +32,19 @@ const Toast = ({
   type: "success" | "error" | "warning";
 }) => {
   return (
-    <div
+    <motion.div
       className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-medium ${
-        type === "success"
-          ? "bg-green-500 text-white"
-          : type === "error"
-          ? "bg-red-500 text-white"
-          : "bg-yellow-500 text-white"
+        type === "success" 
+          ? "bg-green-500 text-white" 
+          : "bg-red-500 text-white"
       }`}
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{ duration: 0.3 }}
     >
       {message}
-    </div>
+    </motion.div>
   );
 };
 //#endregion
@@ -393,6 +396,13 @@ export default function BandejaMensajes() {
       {/* Notificaciones Toast */}
       {toast && <Toast message={toast.text} type={toast.type} />}
 
+      <motion.div
+        className="w-full px-4 sm:px-6 bg-white rounded-lg shadow"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 50 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
       <div className="w-full px-4 sm:px-6 bg-white rounded-lg shadow">
         <div className="min-h-screen bg-gray-100 py-4 px-2 sm:px-4">
           <div className="flex flex-col lg:flex-row gap-4 h-[85vh]">
@@ -694,6 +704,7 @@ export default function BandejaMensajes() {
           </div>
         </div>
       </div>
+      </motion.div>
     </>
   );
   //#endregion
