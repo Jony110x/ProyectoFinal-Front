@@ -13,7 +13,6 @@ interface Deudor {
   fullname: string;
   email: string;
   dni: number;
-  carer: string;
   carer_id: number | null;
   total_pagos_realizados: number;
 }
@@ -179,7 +178,6 @@ export default function Deudores() {
         d.fullname,
         d.username,
         d.email,
-        d.carer,
         d.total_pagos_realizados
       ]);
 
@@ -368,7 +366,6 @@ export default function Deudores() {
                     <th className="py-2 px-4 text-left">Nombre Completo</th>
                     <th className="py-2 px-4 text-left">Usuario</th>
                     <th className="py-2 px-4 text-left">Email</th>
-                    <th className="py-2 px-4 text-left">Carrera</th>
                     <th className="py-2 px-4 text-left">Pagos Realizados</th>
                     <th className="py-2 px-4 text-left">Acciones</th>
                   </tr>
@@ -386,7 +383,6 @@ export default function Deudores() {
                       <td className="py-2 px-4 font-medium">{deudor.fullname}</td>
                       <td className="py-2 px-4">@{deudor.username}</td>
                       <td className="py-2 px-4 text-sm">{deudor.email}</td>
-                      <td className="py-2 px-4">{deudor.carer}</td>
                       <td className="py-2 px-4 text-center">{deudor.total_pagos_realizados}</td>
                       <td className="py-2 px-4">
                         <button
@@ -434,10 +430,6 @@ export default function Deudores() {
                     <div className="flex justify-between">
                       <span className="font-semibold text-gray-700">Email:</span>
                       <span className="text-gray-600 truncate ml-2">{deudor.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-gray-700">Carrera:</span>
-                      <span className="text-gray-600">{deudor.carer}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-semibold text-gray-700">Pagos realizados:</span>
